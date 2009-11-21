@@ -1,6 +1,7 @@
 '''
 This module contains all user-defined exceptions for FWAC.
 '''
+import sys
 import urllib
 import urllib2
 import wx
@@ -39,7 +40,8 @@ class ReportErrorDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Report Error', size=(350, 265))
         self.CenterOnParent()
         
-        self.err = err
+        self.err = str(err)
+        self.success = True
         
         # Dialog widgets
         infoBox = wx.StaticText(self, wx.ID_ANY, "An error has occurred.\n\nPlease enter any related notes in the space below and click the Report button to send the log to us for analysis. Otherwise, click cancel.")
@@ -66,10 +68,16 @@ class ReportErrorDialog(wx.Dialog):
         
         self.Sizer = self.sizer
 
+    @property
+    def Success(self):
+        return self.success
         
     # Event handlers
     def cmdReport_Click(self,event):
-        sendErrorReport(self.err, self.txtReport.Value)
+        try:
+            sendErrorReport(self.err, str(self.txtReport.Value))
+        except:
+            self.success = False
         self.EndModal(wx.ID_OK)
         
         
@@ -79,14 +87,14 @@ def sendErrorReport(err, userMsg):
     errorData = urllib.urlencode({'userMsg' : userMsg, 'trace' : err})
     try:
         response = urllib2.urlopen('http://justicelab.org/find/report_error.php', errorData)
-        print "Error report submitted successfully" 
     except urllib2.URLError, e:
         if hasattr(e, 'reason'):
-            print 'The server could not be reached.'
-            print 'Reason: ', e.reason
+            sys.stderr.write('The server could not be reached.')
+            sys.stderr.write('Reason: %s' % e.reason)
         elif hasattr(e, 'code'):
-            print 'The server couldn\'t fulfill the request.'
-            print 'Error code: ', e.code
+            sys.stderr.write('The server couldn\'t fulfill the request.')
+            sys.stderr.write('Error code: %s' % e.code)
+        raise
 
 
         
