@@ -13,6 +13,7 @@ import data.view
 import math
 import wx
 
+#TODO: validate input
 class EditNameDialog(wx.Dialog):
     """
     This dialog allows the user to rename the labels of the incoming data set
