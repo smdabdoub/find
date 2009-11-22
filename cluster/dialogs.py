@@ -99,6 +99,7 @@ class KMeansDialog(ClusterOptionsDialog):
             dlg = CenterChooserDialog(self)
             if dlg.ShowModal() == wx.ID_OK:
                 self.initialCenters = dlg.GetCenters()
+            dlg.Destroy()
         event.Skip()
             
     def chkInitialCenters_Click(self, event):
@@ -225,9 +226,16 @@ class CenterChooserDialog(wx.Dialog):
         
         self.SetSizer(self.sizer)
         self.SetBackgroundColour("white")
+        
+        self.figure.canvas.mpl_connect('button_press_event', self.OnClick)
+    
+    
+    def OnClick(self, event):
+        if (event.inaxes is not None):
+            print event.x,event.y
+            print event.inaxes.get_position().get_points()
+            self.windowParent.AddChosenCenter((event.xdata, event.ydata))
 
-    def _GetSelectedAxes(self):
-        return [cbx.GetClientData(cbx.GetSelection()) for cbx in self.dataSelectors]
 
     def OnCBXClick(self, e):
         """ 
@@ -237,6 +245,11 @@ class CenterChooserDialog(wx.Dialog):
         cbxSelected = self._GetSelectedAxes()
         self.facsPlotPanel.updateAxes(cbxSelected, True)
         
+    
+    def _GetSelectedAxes(self):
+        return [cbx.GetClientData(cbx.GetSelection()) for cbx in self.dataSelectors]
+    
+    
     def AddChosenCenter(self, point):
         cbxSelected = self._GetSelectedAxes()
         dims = DataStore.getCurrentDataSet().labels
