@@ -21,6 +21,10 @@ class TreePopupMenu(wx.Menu):
 
         # Menu items specific to a data item
         if ('dataItem' in kwargs and kwargs['dataItem']):
+            # Rename data item
+            self.rename = wx.MenuItem(self, wx.NewId(), 'Rename', 'Give a new display name to this data item')
+            self.AppendItem(self.rename)
+            self.Bind(wx.EVT_MENU, self.OnRename, id=self.rename.GetId())
             # Histogram
             self.plotHistogram = wx.MenuItem(self, plot.ID_PLOTS_HISTOGRAM, 'Histogram', 'Plot a 1D histogram of the X-axis data')
             self.plotSubmenu.AppendItem(self.plotHistogram)
@@ -64,12 +68,16 @@ class TreePopupMenu(wx.Menu):
     def OnClearClusteringSelection(self, event):
         self.parent.clearClusteringSelection()
     
+    def OnRename(self, event):
+        self.parent.renameItem()
+    
     def OnDelete(self, event):
         self.parent.deleteSelection()
         
     def OnInfo(self, event):
         dlg = ClusterInfoDialog(self.parent.TopLevelParent)
         dlg.Show()
+        dlg.Destroy()
         
     def OnPlot(self, event):
         self.parent.plotData(event.GetId())
