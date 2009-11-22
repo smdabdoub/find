@@ -187,6 +187,7 @@ class DataGrid(gridlib.Grid):
             self.GetTable().SetColLabelValue(colID, dlg.Text)
             self.GetTable().Refresh()
             print "Label changed to:", dlg.Text
+        dlg.Destroy()
 
     # Event method called when a column move needs to take place
     def OnColMove(self, evt):
