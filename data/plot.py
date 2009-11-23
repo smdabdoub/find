@@ -30,24 +30,24 @@ def colorcycle(ind=None, colors=plotColors):
 
 # Plotting methods
 def scatterplot2D(subplot, figure, dims):
-    xlim = (1, np.max(subplot.getData()[:,dims[0]])*1.5)
-    ylim = (1, np.max(subplot.getData()[:,dims[1]])*1.5)
+    xlim = (1, np.max(subplot.Data[:,dims[0]])*1.5)
+    ylim = (1, np.max(subplot.Data[:,dims[1]])*1.5)
     # create the subplot and set its attributes
     subplot.axes = figure.add_subplot(subplot.mnp, xlim=xlim, ylim=ylim, autoscale_on=False)
     #TODO: retrieve scaling info from subplot
     subplot.axes.set_xscale('log', nonposx='clip')
     subplot.axes.set_yscale('log', nonposy='clip')
-    subplot.axes.set_xlabel(subplot.getLabels()[dims[0]])
-    subplot.axes.set_ylabel(subplot.getLabels()[dims[1]])
+    subplot.axes.set_xlabel(subplot.Labels[dims[0]])
+    subplot.axes.set_ylabel(subplot.Labels[dims[1]])
     subplot.axes.set_title(subplot.Title)
     
     # draw the supplied FACS data
     if (not subplot.isDataClustered()):
-        subplot.axes.plot(subplot.getData()[:,dims[0]], 
-                          subplot.getData()[:,dims[1]], 
+        subplot.axes.plot(subplot.Data[:,dims[0]], 
+                          subplot.Data[:,dims[1]], 
                           '.', ms=1, color='black')
     else:
-        data = separate(subplot.getData(), subplot.getClustering())
+        data = separate(subplot.Data, subplot.Clustering)
         for i in range(len(data)):
             xs = data[i][:,dims[0]]
             ys = data[i][:,dims[1]]
@@ -57,22 +57,28 @@ def scatterplot2D(subplot, figure, dims):
 
 def histogram(subplot, figure, dims):
     subplot.axes = figure.add_subplot(subplot.mnp, title=subplot.Title)
-    subplot.axes.set_xlabel(subplot.getLabels()[dims[0]])
-    subplot.axes.hist(subplot.getData()[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
+    subplot.axes.set_xlabel(subplot.Labels[dims[0]])
+    subplot.axes.set_yscale('log')
+    subplot.axes.set_xscale('log')
+    #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
+    h, b = np.histogram(subplot.Data[:, dims[0]], bins=200, new=True)
+    b = (b[:-1] + b[1:])/2.0
+    subplot.axes.plot(b, h)
+
 
 
 
 
 def boxplot(subplot, figure, labelRotation = -20):
-    ymax = np.max(np.maximum.reduce(subplot.getData()))
+    ymax = np.max(np.maximum.reduce(subplot.Data))
     ylim = (1, ymax*10)
     # create the subplot and set its attributes
     subplot.axes = figure.add_subplot(subplot.mnp, 
                                    ylim=ylim, yscale='log', 
                                    autoscale_on=False,
                                    title=subplot.Title)
-    subplot.axes.set_xticklabels(subplot.getLabels(), rotation=labelRotation)
-    subplot.axes.boxplot(subplot.getData(), sym='')
+    subplot.axes.set_xticklabels(subplot.Labels, rotation=labelRotation)
+    subplot.axes.boxplot(subplot.Data, sym='')
 
 
 
@@ -85,8 +91,8 @@ def barplot(subplot, figure):
     Some techniques borrowed from:
     http://www.scipy.org/Cookbook/Matplotlib/BarCharts
     """
-    dataSize = len(subplot.getData())
-    clustering = separate(subplot.getData(), subplot.getClustering())
+    dataSize = len(subplot.Data)
+    clustering = separate(subplot.Data, subplot.Clustering)
     percents = [float(len(cluster))/dataSize*100 for cluster in clustering]
     numBars = len(percents)
     width = 0.5
