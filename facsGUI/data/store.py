@@ -6,10 +6,7 @@ This module contains classes used for storing FACS data.
 @organization: Nationwide Children's Hospital
 """
 
-from cluster.methods import getStringRepr
-from cluster.dialogs import getClusterDialog
 from operator import itemgetter
-import StringIO
 
 class DataStore(object):
     """
@@ -25,7 +22,7 @@ class DataStore(object):
         pass
     
     @classmethod
-    def add(cls, data):
+    def add(cls, data, id=None):
         """
         Adds a FacsData instance to the store.
         
@@ -33,10 +30,11 @@ class DataStore(object):
         @param data: The new dataset to include in the store.
         """
         # set the ID for the data set
-        if cls._facsData:
-            data.ID = cls.sortData()[-1][0] + 1
-        else:
-            data.ID = 0
+        if id is None:
+            if cls._facsData:
+                data.ID = cls.sortData()[-1][0] + 1
+            else:
+                data.ID = 0
         
         # add to the store 
         cls._facsData[data.ID] = data
@@ -75,7 +73,14 @@ class DataStore(object):
             if parent is not None:
                 cls._facsData[parent].children.remove(index)
             del cls._facsData[index]
-
+    
+    @classmethod
+    def removeAll(cls):
+        """
+        Removes all loaded data.
+        """
+        cls._facsData.clear()
+        
     @classmethod
     def get(cls, key):
         return cls._facsData[key]
@@ -175,7 +180,7 @@ class FacsData(object):
     """
     def __init__(self, filename, labels, data, parent = None):
         self.filename = filename
-        self.displayname = filename  #TODO: use the EditName dlg to change this
+        self.displayname = filename
         self.labels = labels
         self.data = data
         self.ID = None
@@ -184,18 +189,18 @@ class FacsData(object):
         self.selDims = []
         self.nodeExpanded = False
          
-        #TODO: Consider creating a clustering class to represent this information
+        #TODO: move all this to the Clustering class
         # Clustering information 
         self.methodIDs = {}
         self.clustering = {}
         self.clusteringOpts = {}
         self.clusteringSelDims = {}
+        # TODO: move this to a dict keyed on ID in the tree class
         self.infoExpanded = {}       # an unpleasant hack to store the node state in the tree menu of the GUI
-                                     # TODO: move this to a dict keyed on ID in the tree class
         
         self.selectedClustering = None
         
-    def addClustering(self, methodID, clusterIDs, clusteringOpts):
+    def addClustering(self, methodID, clusterIDs, clusteringOpts, cID=None):
         """
         Adds an alternate clustering of the data.
         
@@ -207,7 +212,7 @@ class FacsData(object):
         @type clusteringOpts: dict
         @param clusteringOpts: A dictionary of algorithm options.
         """
-        clustID = len(self.clustering)
+        clustID = cID if (cID is not None) else len(self.clustering)
         
         self.methodIDs[clustID] = methodID
         self.clustering[clustID] = clusterIDs
@@ -259,30 +264,6 @@ class FacsData(object):
                                  doc="""Property for dealing with the currently  
                                         selected clustering of this data set.""")
     
-    def clusteringInfo(self, id):
-        """
-        Creates a single string representing in a human-readable manner, the
-        options used to perform a particular clustering.
-        
-        @type id: int
-        @param id: The id of the specific clustering query.
-        @rtype: str
-        @return: An easily understandable string representation of clustering options.
-        """
-        strOpts, strValues = getClusterDialog(self.methodIDs[id], None).getStrMethodArgs()
-        opts = self.clusteringOpts[id]
-        info = StringIO.StringIO()
-        # create info string
-        for opt in opts:
-            info.write(strOpts[opt])
-            info.write(': ')
-            if (opt in strValues):
-                info.write(strValues[opt][opts[opt]])
-            else:
-                info.write(opts[opt])
-            info.write('\n')
-        
-        return info.getvalue()
         
         
 
