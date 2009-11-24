@@ -11,14 +11,12 @@ This module contains classes and methods used to visualize FACS data.
 from display.contextmenus import TreePopupMenu
 from data import plot
 import cluster.methods
-from cluster.util import separate
 from store import DataStore
 from store import FacsData
 
 # 3rd Party imports
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
-import numpy as np
 from matplotlib.pyplot import subplot
 import wx
 import wx.lib.customtreectrl as CT
@@ -48,7 +46,6 @@ class PlotPanel(wx.Panel):
         wx.Panel.__init__( self, parent, **kwargs )
         self.parent = parent.GrandParent
         self.windowParent = parent
-        self.selectedSubplot = None
         self.singlePlotWindow = False
         
         # initialize matplotlib stuff
@@ -58,44 +55,16 @@ class PlotPanel(wx.Panel):
         self._setColor(color)
         self.SetBackgroundColour("white")
         
+        self._resizeflag = True
         self._setSize()
 
         self.Bind(wx.EVT_IDLE, self._onIdle)
         self.Bind(wx.EVT_SIZE, self._onSize)
-        
-        self.figure.canvas.mpl_connect('button_press_event', self._onClick)
-        
-        
-    def setSelectedSubplot(self, plotNum):
-        if (not self.singlePlotWindow):
-            if (plotNum > 0):
-                self.parent.setSelectedPlotStatus("Subplot "+str(plotNum)+" selected")
-            else:
-                self.parent.setSelectedPlotStatus("")
-            self.selectedSubplot = plotNum
+   
         
         
     def saveFigure(self, fname, fmt, transparent=False):
         self.figure.savefig(fname, format=fmt, transparent=transparent)
-        
-        
-    def _onClick(self, event):
-        if (event.inaxes is not None):
-            if (self.singlePlotWindow):
-                print event.x,event.y
-                print event.inaxes.get_position().get_points()
-                self.windowParent.AddChosenCenter((event.xdata, event.ydata))
-            elif (event.button == 3):  # Right click
-                plotNum = event.inaxes.get_title().split(':')[0]
-                self.setSelectedSubplot(int(plotNum))
-                pt = event.guiEvent.GetPosition()
-                # Append the figure menu to the plots menu
-                #self.parent.plotsMenu.AppendSubMenu(FigurePopupMenu(self, (event.xdata, event.ydata)), "Figure", 
-                #                                    "Options related to the clicked figure")
-                self.PopupMenuXY(self.parent.plotsMenu, pt.x, pt.y)
-            else:
-                plotNum = event.inaxes.get_title().split(':')[0]
-                self.setSelectedSubplot(int(plotNum))
 
 
     def _setColor( self, rgbtuple=None ):
@@ -134,6 +103,7 @@ class PlotPanel(wx.Panel):
     def draw(self): pass # abstract, to be overridden by child classes
 
 
+
 class FacsPlotPanel(PlotPanel):
     """
     The main display figure for the FACS data.
@@ -146,10 +116,29 @@ class FacsPlotPanel(PlotPanel):
         self.subplotRows = 1
         self.subplotCols = 1
         self.selectedSubplot = None
+        
 
         # initiate plotter
         PlotPanel.__init__( self, parent, **kwargs )
         self._setColor((255,255,255))
+        self.figure.canvas.mpl_connect('button_press_event', self.onClick)
+        
+        
+    def onClick(self, event):
+        if (event.inaxes is not None):
+            if (event.button == 3):  # Right click
+                plotNum = event.inaxes.get_title().split(':')[0]
+                self.setSelectedSubplot(int(plotNum))
+                pt = event.guiEvent.GetPosition()
+                # Append the figure menu to the plots menu
+                #self.parent.plotsMenu.AppendSubMenu(FigurePopupMenu(self, (event.xdata, event.ydata)), "Figure", 
+                #                                    "Options related to the clicked figure")
+                self.PopupMenuXY(self.parent.plotsMenu, pt.x, pt.y)
+            else:
+                plotNum = event.inaxes.get_title().split(':')[0]
+                self.setSelectedSubplot(int(plotNum))
+                self.parent.chkLinked.Value = self.CurrentSubplotLinked
+                
         
     def addSubplot(self, dataStoreIndex, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER):
         """
@@ -208,7 +197,8 @@ class FacsPlotPanel(PlotPanel):
 
     def renumberPlots(self):
         """ 
-        renumber the subplots and their titles
+        Renumber the subplots and their titles by their position in the list
+        beginning with 1.
         """
         for n, subplot in enumerate(self.subplots):
             subplot.n = n+1
@@ -218,6 +208,24 @@ class FacsPlotPanel(PlotPanel):
             self.setSelectedSubplot(len(self.subplots))
         else:
             self.setSelectedSubplot(0)
+            
+    
+    def loadSavedPlots(self, subplotDicts, currentSubplot):
+        """
+        Create a new list of Subplot instances from the settings loaded
+        from a saved project file.
+        
+        @type subplotDicts: list of dicts
+        @param subplotDicts: A list containing the __dict__ copied from each
+                             of the existing Subplot instances at export
+        @type currentSubplot: int
+        @param currentSubplot: The index of the current subplot
+        """
+        self.subplots = [Subplot() for _ in subplotDicts]
+        for i, subplot in enumerate(self.subplots):
+            subplot.load(subplotDicts[i])
+        
+        self.setSelectedSubplot(currentSubplot)
             
     
     def plotData(self, dataID, clusterID=None, plotType=plot.ID_PLOTS_SCATTER):
@@ -240,6 +248,14 @@ class FacsPlotPanel(PlotPanel):
                              'Select Subplot', wx.OK|wx.ICON_ERROR)
             
     
+    def setSelectedSubplot(self, plotNum):
+        if (plotNum > 0):
+            self.parent.setSelectedPlotStatus("Subplot "+str(plotNum)+" selected")
+        else:
+            self.parent.setSelectedPlotStatus("")
+        self.selectedSubplot = plotNum
+    
+    
     def setCurrentSubplotDataSet(self, dataIndex, redraw=True):
         """
         Assigns a particular data set to the currently selected subplot.
@@ -247,7 +263,7 @@ class FacsPlotPanel(PlotPanel):
         @type dataIndex: int
         @param dataIndex: The index of the data set from the store this subplot represents
         """
-        self.subplots[self.selectedSubplot-1].setData(dataIndex)
+        self.subplots[self.selectedSubplot-1].Data = dataIndex
         self.subplots[self.selectedSubplot-1].drawFlag = redraw
         self.draw()
     
@@ -259,9 +275,23 @@ class FacsPlotPanel(PlotPanel):
         @param clusteringIndex: The index into the list of clusterings for the 
             data set this subplot represents
         """
-        self.subplots[self.selectedSubplot-1].setClustering(clusteringIndex)
+        self.subplots[self.selectedSubplot-1].Clustering = clusteringIndex
         self.subplots[self.selectedSubplot-1].drawFlag = redraw
         self.draw()
+        
+    def setCurrentSubplotLinked(self, linked):
+        if len(self.subplots) > 0:
+            if (not linked):
+                self.subplots[self.selectedSubplot-1].linkedDimensions = (self.XAxisColumn, self.YAxisColumn)
+            else:
+                self.subplots[self.selectedSubplot-1].linkedDimensions = None
+                self.draw()
+    
+    def getCurrentSubplotLinked(self):
+        return self.subplots[self.selectedSubplot-1].linkedDimensions is None
+    
+    CurrentSubplotLinked = property(getCurrentSubplotLinked, setCurrentSubplotLinked) 
+    
     
     
     def updateAxes(self, selectedAxes, redraw=False):
@@ -280,10 +310,11 @@ class FacsPlotPanel(PlotPanel):
             self.YAxisColumn = selectedAxes[1]
             
         if (redraw):
-            for subplot in self.subplots:
-                subplot.drawFlag = True
+#            for subplot in self.subplots:
+#                subplot.drawFlag = True
             self.draw()
             
+    #TODO: The redraw param should probably default to False
     def updateSubplotGrid(self, rows, cols, redraw=True):
         """
         Specify the dimensions of the subplot grid for the main figure.
@@ -337,6 +368,8 @@ class FacsPlotPanel(PlotPanel):
         @param subplot: The Subplot instance to draw on the figure.
         """            
         dims = (self.XAxisColumn, self.YAxisColumn)
+        if (subplot.linkedDimensions is not None):
+            dims = subplot.linkedDimensions
         subplot.mnp = self.mnp(row, col, subplot.n)
         if (subplot.Title == ''):
             subplot.Title = subplot.DisplayName
@@ -378,7 +411,7 @@ class Subplot(object):
     Represents a single subplot and the options necessary for specifying what is displayed.
     """
     
-    def __init__(self, n, dataStoreIndex, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER):
+    def __init__(self, n = None, dataStoreIndex = None, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER):
         self.n = n
         self.dataIndex = dataStoreIndex
         self.clustIndex = clusteringIndex
@@ -386,7 +419,19 @@ class Subplot(object):
         self.axes = None
         self.mnp = None
         self._title = ''
+        self.linkedDimensions = None
         self.drawFlag = True
+        
+    def load(self, attrs):
+        """
+        Assign values to each of the Subplot private members using the 
+        attributes for a Subplot instance from a saved project file.
+        
+        @type attrs: dict
+        @param attrs: The __dict__ copied from a Subplot instances                              
+        """
+        for key in attrs:
+            self.__dict__[key] = attrs[key]
 
 
     # TODO: replace get/set with properties
@@ -404,6 +449,9 @@ class Subplot(object):
     def setData(self, dataStoreIndex):
         self.dataIndex = dataStoreIndex
         self.clustIndex = None
+        
+    Data = property(getData, setData, 
+                    doc='Get/Set the DataStore ID of the dataset visualized by this subplot.')
     
 
     
@@ -427,9 +475,13 @@ class Subplot(object):
             data set this subplot represents 
         """
         self.clustIndex = clusteringIndex
+        
+    Clustering = property(getClustering, setClustering, 
+                          doc="""Get/Set the index of the clustering of the 
+                                 data set visualized by this subplot""")
     
-    
-    def getLabels(self):
+    @property
+    def Labels(self):
         """
         Retrieve the column labels for the data backing this subplot.
         
@@ -468,7 +520,11 @@ class Subplot(object):
     Title = property(getTitle, setTitle, doc='The visible title at the top of the subplot.')
     
     
-#---------------------------------------------------------------------------
+
+
+
+from display.dialogs import EditNameDialog
+from cluster.util import clusteringInfo
 class FacsTreeCtrlPanel(wx.Panel):
     def __init__(self, parent):
         # Use the WANTS_CHARS style so the panel doesn't eat the Return key.
@@ -495,6 +551,9 @@ class FacsTreeCtrlPanel(wx.Panel):
 
 
     def updateTree(self):
+        """
+        Rebuilds the tree from the current state of the DataStore.
+        """
         self.tree.DeleteAllItems()
         
         self.root = self.tree.AddRoot("Data Sets")
@@ -526,7 +585,7 @@ class FacsTreeCtrlPanel(wx.Panel):
                                             " " + str(cIndex+1))
                 if ((fData.selectedClustering == cIndex) and (fData.ID == DataStore.getCurrentIndex())):
                     self.tree.SetItemBold(clust, True)
-                toolTip = fData.clusteringInfo(cIndex)
+                toolTip = clusteringInfo(fData, cIndex)
                 self.tree.SetPyData(clust, (dIndex,cIndex,toolTip)) #(data index, cluster index, tooltip)
                 self.tree.SetItemImage(clust, self.fldridx, wx.TreeItemIcon_Normal)
                 self.tree.SetItemImage(clust, self.fldropenidx, wx.TreeItemIcon_Expanded)
@@ -607,6 +666,24 @@ class FacsTreeCtrlPanel(wx.Panel):
         DataStore.getData()[index].selectedClustering = None
         self.updateTree()
     
+    def renameItem(self):
+        """
+        Give a new display name to the currently selected data item
+        """
+        dataID, clusterID = self.getSanitizedItemSelectionData()
+        data = DataStore.get(dataID)
+        dlg = EditNameDialog(self.Parent, data.displayname)
+        if dlg.ShowModal() == wx.ID_OK:
+            data.displayname = dlg.Text
+            item = self.tree.GetSelection()
+            item.SetText(dlg.Text)
+            self.tree.RefreshSelected()
+            item.SetHilight(False)
+            item.SetHilight(True)
+        
+        dlg.Destroy()
+            
+    
     def deleteSelection(self):
         """
         Delete the data object referenced by the current tree selection.
@@ -625,7 +702,7 @@ class FacsTreeCtrlPanel(wx.Panel):
 
     # Tree Event Handling
     def OnLeftDown(self, event):
-        pt = event.GetPosition();
+        pt = event.GetPosition()
         item, flags = self.tree.HitTest(pt)
         if item:
             self.tree.SelectItem(item)
@@ -663,7 +740,6 @@ class FacsTreeCtrlPanel(wx.Panel):
         if item:
             self.setDataExpanded(item, False)
 
-#---------------------------------------------------------------------------
 
     
     
