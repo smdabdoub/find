@@ -12,11 +12,12 @@ class TreePopupMenu(wx.Menu):
 
         self.parent = parent
         
+        #TODO: retrieve the appropriate plotting methods from the data.plot module
         # Plot submenu
         self.plotSubmenu = wx.Menu()
-        self.plotScatter = wx.MenuItem(self, plot.ID_PLOTS_SCATTER, 'Scatter Plot')
+        self.plotScatter = wx.MenuItem(self, plot.ID_PLOTS_SCATTER_2D, '2D Scatter Plot')
         self.plotSubmenu.AppendItem(self.plotScatter)
-        self.Bind(wx.EVT_MENU, self.OnPlot, id=plot.ID_PLOTS_SCATTER)
+        self.Bind(wx.EVT_MENU, self.OnPlot, id=plot.ID_PLOTS_SCATTER_2D)
         self.AppendSubMenu(self.plotSubmenu, 'Plot', 'Apply various data visualizations to the selected plot')
 
         # Menu items specific to a data item
@@ -85,6 +86,11 @@ class TreePopupMenu(wx.Menu):
     def OnView(self, event):
         DataStore.view()
         
+
+
+ID_PLOTS_DELETE     = wx.NewId()
+ID_PLOTS_PROPERTIES = wx.NewId()
+ID_PLOTS_RENAME     = wx.NewId()
         
 class FigurePopupMenu(wx.Menu):
     """
@@ -96,21 +102,40 @@ class FigurePopupMenu(wx.Menu):
     @type dataPoint: tuple
     @var dataPoint: The inaxes location of the mouse click 
     """
-    def __init__(self, parent, dataPoint, **kwargs):
+    def __init__(self, parent, **kwargs):
         wx.Menu.__init__(self)
 
         self.parent = parent
-        self.dataPoint = dataPoint
         
         # Begin menu
-        isolate = wx.MenuItem(self, wx.NewId(), 'Isolate Cluster')
-        self.AppendItem(isolate)
-        self.Bind(wx.EVT_MENU, self.OnIsolate, id=isolate.GetId())
+        self.Append(ID_PLOTS_PROPERTIES, "Properties...", "Edit/View the settings of this plot")
+        self.Bind(wx.EVT_MENU, self.OnShowProperties, id=ID_PLOTS_PROPERTIES)
+        self.Append(ID_PLOTS_DELETE, "Delete Subplot", " Delete the selected subplot")
+        self.Bind(wx.EVT_MENU, self.OnDeleteSubplot, id=ID_PLOTS_DELETE)
+        self.Append(ID_PLOTS_RENAME, "Rename Subplot", " Rename the selected subplot")
+        self.Bind(wx.EVT_MENU, self.OnRenameSubplot, id=ID_PLOTS_RENAME)
         
     
     
-    def OnIsolate(self, event):
-        print "Isolate menu clicked"
+    def OnDeleteSubplot(self, event):
+        """
+        Instructs the FacsPlotPanel instance to remove the currently selected subplot.
+        """
+        self.parent.deleteSubplot()
+        
+        
+    def OnRenameSubplot(self, event):
+        """
+        """
+        self.parent.renameSubplot()
+        
+        
+    def OnShowProperties(self, event):
+        """
+        """
+        self.parent.showSubplotProperties()
+    
+    
         
         
         
