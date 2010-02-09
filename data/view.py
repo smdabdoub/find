@@ -9,6 +9,7 @@ This module contains classes and methods used to visualize FACS data.
 
 # Local imports
 from display.contextmenus import TreePopupMenu
+import display.plot
 from data import plot
 import cluster.methods
 from store import DataStore
@@ -103,7 +104,11 @@ class PlotPanel(wx.Panel):
     def draw(self): pass # abstract, to be overridden by child classes
 
 
+from display.contextmenus import FigurePopupMenu
+from display.dialogs import EditNameDialog
 
+#TODO: decide whether to call it the selected subplot or current subplot, and rename everything to match
+#TODO: have the parent class pass in event handler(s) in order for it to be notified when certain things happen that require changes in the parent (instead of this class referencing the parent and directly making changes)
 class FacsPlotPanel(PlotPanel):
     """
     The main display figure for the FACS data.
@@ -121,26 +126,21 @@ class FacsPlotPanel(PlotPanel):
         # initiate plotter
         PlotPanel.__init__( self, parent, **kwargs )
         self._setColor((255,255,255))
-        self.figure.canvas.mpl_connect('button_press_event', self.onClick)
+        self.figure.canvas.mpl_connect('button_press_event', self.OnClick)
         
         
-    def onClick(self, event):
+    def OnClick(self, event):
         if (event.inaxes is not None):
-            if (event.button == 3):  # Right click
-                plotNum = event.inaxes.get_title().split(':')[0]
-                self.setSelectedSubplot(int(plotNum))
+            plotNum = event.inaxes.get_title().split(':')[0]
+            self.setSelectedSubplot(int(plotNum))
+            
+            # Right click
+            if (event.button == 3):
                 pt = event.guiEvent.GetPosition()
-                # Append the figure menu to the plots menu
-                #self.parent.plotsMenu.AppendSubMenu(FigurePopupMenu(self, (event.xdata, event.ydata)), "Figure", 
-                #                                    "Options related to the clicked figure")
-                self.PopupMenuXY(self.parent.plotsMenu, pt.x, pt.y)
-            else:
-                plotNum = event.inaxes.get_title().split(':')[0]
-                self.setSelectedSubplot(int(plotNum))
-                self.parent.chkLinked.Value = self.CurrentSubplotLinked
+                self.PopupMenuXY(FigurePopupMenu(self), pt.x, pt.y)
                 
         
-    def addSubplot(self, dataStoreIndex, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER):
+    def addSubplot(self, dataStoreIndex, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER_2D):
         """
         Add a subplot to the figure.
         
@@ -193,7 +193,21 @@ class FacsPlotPanel(PlotPanel):
         self.renumberPlots()
         
         self.draw()
-
+        
+        
+    def renameSubplot(self):
+        """
+        Allows the user to set the title of the selected subplot.
+        """
+        subplot = self.subplots[self.selectedSubplot-1]
+        titleDlg = EditNameDialog(self, subplot.Title.split(':')[1].strip())
+        if (titleDlg.ShowModal() == wx.ID_OK):
+            subplot.Title = titleDlg.Text
+            titleDlg.Destroy()
+            self.draw()
+        
+        titleDlg.Destroy()
+        
 
     def renumberPlots(self):
         """ 
@@ -228,7 +242,7 @@ class FacsPlotPanel(PlotPanel):
         self.setSelectedSubplot(currentSubplot)
             
     
-    def plotData(self, dataID, clusterID=None, plotType=plot.ID_PLOTS_SCATTER):
+    def plotData(self, dataID, clusterID=None, plotType=plot.ID_PLOTS_SCATTER_2D):
         """
         Plots the specified data set to the currently selected subplot.
         
@@ -250,10 +264,17 @@ class FacsPlotPanel(PlotPanel):
     
     def setSelectedSubplot(self, plotNum):
         if (plotNum > 0):
+            self.selectedSubplot = plotNum
             self.parent.setSelectedPlotStatus("Subplot "+str(plotNum)+" selected")
+            self.parent.chkLinked.Value = self.CurrentSubplotLinked
         else:
             self.parent.setSelectedPlotStatus("")
-        self.selectedSubplot = plotNum
+            self.parent.chkLinked.Value = False
+            
+    def getSelectedSubplot(self):
+        return self.subplots[self.selectedSubplot-1]
+    
+    SelectedSubplot = property(getSelectedSubplot, setSelectedSubplot, doc="""Get/Set the user-selected subplot""")
     
     
     def setCurrentSubplotDataSet(self, dataIndex, redraw=True):
@@ -290,7 +311,19 @@ class FacsPlotPanel(PlotPanel):
     def getCurrentSubplotLinked(self):
         return self.subplots[self.selectedSubplot-1].linkedDimensions is None
     
-    CurrentSubplotLinked = property(getCurrentSubplotLinked, setCurrentSubplotLinked) 
+    CurrentSubplotLinked = property(getCurrentSubplotLinked, setCurrentSubplotLinked)
+    
+    
+    def showSubplotProperties(self):
+        """
+        Display the properties dialog for the current subplot.
+        """
+        subplot = self.SelectedSubplot
+        dlg = display.plot.getPlotOptionsDialog(self, subplot)
+        if (dlg.ShowModal() == wx.ID_OK):
+            subplot.Options = dlg.Options
+            self.draw()
+        dlg.Destroy()
     
     
     
@@ -340,7 +373,7 @@ class FacsPlotPanel(PlotPanel):
         # Clear the figure canvas
         self.canvas.figure.clf() 
         # Draw each subplot
-        if (len(self.subplots) > 0):             
+        if (len(self.subplots) > 0):
             subCount = 0
             for _ in range(self.subplotRows):
                 for _ in range(self.subplotCols):
@@ -349,6 +382,9 @@ class FacsPlotPanel(PlotPanel):
                         self.subplots[subCount].drawFlag = False
                         subCount += 1
                 
+            self.canvas.draw()
+        else:
+            #TODO: test this case thoroughly
             self.canvas.draw()
 
             
@@ -376,7 +412,7 @@ class FacsPlotPanel(PlotPanel):
         
         #TODO: streamline this with a single generic plot method (see cluster)  
         # Plot data using available methods in data.plot
-        if (subplot.plotType == plot.ID_PLOTS_SCATTER):
+        if (subplot.plotType == plot.ID_PLOTS_SCATTER_2D):
             plot.scatterplot2D(subplot, self.figure, dims)
 
         if (subplot.plotType == plot.ID_PLOTS_HISTOGRAM):
@@ -411,11 +447,12 @@ class Subplot(object):
     Represents a single subplot and the options necessary for specifying what is displayed.
     """
     
-    def __init__(self, n = None, dataStoreIndex = None, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER):
+    def __init__(self, n = None, dataStoreIndex = None, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER_2D):
         self.n = n
         self.dataIndex = dataStoreIndex
         self.clustIndex = clusteringIndex
         self.plotType = plotType
+        self.opts = {}
         self.axes = None
         self.mnp = None
         self._title = ''
@@ -451,7 +488,8 @@ class Subplot(object):
         self.clustIndex = None
         
     Data = property(getData, setData, 
-                    doc='Get/Set the DataStore ID of the dataset visualized by this subplot.')
+                    doc="""Get the FacsData instance or Set the DataStore ID 
+                           of the dataset visualized by this subplot.""")
     
 
     
@@ -517,9 +555,17 @@ class Subplot(object):
     def setTitle(self, title):
         self._title = '%i: %s' % (self.n, title)
     
-    Title = property(getTitle, setTitle, doc='The visible title at the top of the subplot.')
+    Title = property(getTitle, setTitle, 
+                     doc='The visible title at the top of the subplot.')
     
+    # Plot Options
+    def getOptions(self):
+        return self.opts
+    def setOptions(self, options):
+        self.opts.update(options)
     
+    Options = property(getOptions, setOptions, 
+                       doc='Get/Set the display options for this subplot')
 
 
 
