@@ -28,14 +28,13 @@ import math
 import sys
 import traceback
 
-
+#TODO: remove these where possible as they are rarely necessary
 # CONSTANTS
 
 # File Menu
 ID_OPEN       = wx.NewId()
 ID_LOAD_STATE = wx.NewId()
 ID_SAVE_STATE = wx.NewId()
-ID_EXIT       = wx.NewId()
 
 # Plots Menu
 ID_PLOTS_ADD      = wx.NewId()
@@ -84,7 +83,7 @@ class MainWindow(wx.Frame):
         for i in range(len(self.dimensions)):
             self.dataSelectors.append(wx.ComboBox(self.rightPanel, ID_CBX+i, "", (-1,-1), (160, -1), [], wx.CB_READONLY))
             self.selectorSizer.AddGrowableCol(i) # so dim selectors take up most space
-            self.selectorSizer.Add(self.dataSelectors[i],1, wx.ALIGN_CENTER | wx.RIGHT, 10)
+            self.selectorSizer.Add(self.dataSelectors[i], 1, wx.ALIGN_CENTER | wx.RIGHT, 10)
             self.Bind(wx.EVT_COMBOBOX, self.onCBXClick, id=ID_CBX+i)
             
         
@@ -123,10 +122,8 @@ class MainWindow(wx.Frame):
         fileMenu.AppendItem(error)
         self.Bind(wx.EVT_MENU, self.OnRaiseError, id=error.GetId())
         # Exit
-        if sys.platform == 'win32':
-            fileMenu.AppendSeparator()
-            fileMenu.Append(ID_EXIT,"E&xit"," Terminate the program")
-            self.Bind(wx.EVT_MENU, self.onMenuExit, id=ID_EXIT)
+        item = fileMenu.Append(wx.ID_EXIT,"E&xit"," Terminate the program")
+        self.Bind(wx.EVT_MENU, self.onMenuExit, item)
         self.Bind(wx.EVT_CLOSE, self.onExit)
         
         # Cluster menu
@@ -157,13 +154,13 @@ class MainWindow(wx.Frame):
         self.plotsMenu.Append(ID_PLOTS_SAVE, "&Save Figure", 
                          " Export the figure as an image")
         self.Bind(wx.EVT_MENU, self.onSaveFigure, id=ID_PLOTS_SAVE)
-        self.plotsMenu.AppendSeparator()
+#        self.plotsMenu.AppendSeparator()
         self.plotsMenu.Append(ID_PLOTS_ADD, "&Add Subplot", " Add a subplot to the current figure")
         self.Bind(wx.EVT_MENU, self.onAddSubplot, id=ID_PLOTS_ADD)
-        self.plotsMenu.Append(ID_PLOTS_DELETE, "&Delete Subplot", " Delete the selected subplot")
-        self.Bind(wx.EVT_MENU, self.onDeleteSubplot, id=ID_PLOTS_DELETE)
-        self.plotsMenu.Append(ID_PLOTS_RENAME, "Rename Subplot", " Rename the selected subplot")
-        self.Bind(wx.EVT_MENU, self.onRenameSubplot, id=ID_PLOTS_RENAME)
+#        self.plotsMenu.Append(ID_PLOTS_DELETE, "&Delete Subplot", " Delete the selected subplot")
+#        self.Bind(wx.EVT_MENU, self.onDeleteSubplot, id=ID_PLOTS_DELETE)
+#        self.plotsMenu.Append(ID_PLOTS_RENAME, "Rename Subplot", " Rename the selected subplot")
+#        self.Bind(wx.EVT_MENU, self.onRenameSubplot, id=ID_PLOTS_RENAME)
         
         # Plugin menu
         self.pluginsMenu = self.generatePluginsMenu()
@@ -369,7 +366,6 @@ class MainWindow(wx.Frame):
                 self.facsPlotPanel.updateAxes([0,1])
                 if (len(self.facsPlotPanel.subplots) == 0 or len(dlg.Paths) > 1):
                     self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex())
-                    self.chkLinked.Value = True
         
             self.statusbar.SetStatusText('All data files loaded.')
             self.treeCtrlPanel.updateTree()
@@ -474,12 +470,14 @@ class MainWindow(wx.Frame):
         else:
             self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex(), clusteringIndex)
     
+    #TODO: remove
     def onDeleteSubplot(self, event):
         """
         Instructs the FacsPlotPanel instance to remove the currently selected subplot.
         """
         self.facsPlotPanel.deleteSubplot()
-        
+    
+    #TODO: remove
     def onRenameSubplot(self, event):
         """
         Allows the user to set the title of the selected subplot.
