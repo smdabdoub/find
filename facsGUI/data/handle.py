@@ -5,31 +5,6 @@ from matplotlib import mlab
 import math
 import numpy
 
-# assume first line contains column labels
-def loadFacsCSV(filename):
-    """
-    Load the specified FACS data file.
-    
-    Note: currently only ASCII csv data files are accepted, 
-    and not binary FCS files.
-    
-    @type filename: string
-    @param filename: The name of the FACS data file to be loaded
-    
-    @rtype: tuple
-    @return: A tuple containing a list of column labels and numpy array 
-        containing the actual FACS data.
-    """
-    print 'loading:',filename
-    # Retrieve first line of column labels
-    facsFile = open(filename,'r')
-    labels = facsFile.readline().rstrip().replace('"','').split(',')
-    facsFile.close()
-    print 'Column labels:',labels
-    # load actual data
-    data = mlab.load(filename, delimiter=',', skiprows=1)
-    return (labels,data)
-
 def filterData(data, selDims):
     """
     Filter out the columns that are not selected for analysis
@@ -104,7 +79,19 @@ def reorderColumns(data, columnOrder):
     
     return numpy.column_stack(tuple([data[:,i] for i in columnOrder]))
 
+
 def mergeData(clusters, data):
+    """
+    Combine the specified clusters into one data array.
+    
+    :@type clusters: list
+    :@param clusters: The IDs of the clusters to merge.
+    :@type data: list or array
+    :@param data: The data pre-separated into clusters.
+    
+    :@rtype: array
+    :@return: A new data array containing the merged clusters.
+    """
     rows = sum([len(data[i]) for i in clusters])
     cols = len(data[i][0])
     cat = tuple([data[i] for i in clusters])
