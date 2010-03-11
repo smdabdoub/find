@@ -1,10 +1,13 @@
 
-from data import plot
+import plot.methods
+import data.store
 from data.store import DataStore
 from display.dialogs import ClusterInfoDialog
 
 import wx
 
+from itertools import ifilter
+from sets import ifilterfalse
 
 class TreePopupMenu(wx.Menu):
     def __init__(self, parent, **kwargs):
@@ -12,12 +15,14 @@ class TreePopupMenu(wx.Menu):
 
         self.parent = parent
         
-        #TODO: retrieve the appropriate plotting methods from the data.plot module
+        # Retrieve the appropriate plotting methods from the plot.methods module
+        dataPlots = ifilter(lambda item: data.store.ID_DATA_ITEM in item[-2], 
+                            plot.methods.AvailableMethods().itervalues())
+        clusterPlots = ifilter(lambda item: data.store.ID_CLUSTERING_ITEM in item[-2], 
+                               plot.methods.AvailableMethods().itervalues())
+        
         # Plot submenu
         self.plotSubmenu = wx.Menu()
-        self.plotScatter = wx.MenuItem(self, plot.ID_PLOTS_SCATTER_2D, '2D Scatter Plot')
-        self.plotSubmenu.AppendItem(self.plotScatter)
-        self.Bind(wx.EVT_MENU, self.OnPlot, id=plot.ID_PLOTS_SCATTER_2D)
         self.AppendSubMenu(self.plotSubmenu, 'Plot', 'Apply various data visualizations to the selected plot')
 
         # Menu items specific to a data item
@@ -26,22 +31,13 @@ class TreePopupMenu(wx.Menu):
             self.rename = wx.MenuItem(self, wx.NewId(), 'Rename', 'Give a new display name to this data item')
             self.AppendItem(self.rename)
             self.Bind(wx.EVT_MENU, self.OnRename, id=self.rename.GetId())
-            # Histogram
-            self.plotHistogram = wx.MenuItem(self, plot.ID_PLOTS_HISTOGRAM, 'Histogram', 'Plot a 1D histogram of the X-axis data')
-            self.plotSubmenu.AppendItem(self.plotHistogram)
-            self.Bind(wx.EVT_MENU, self.OnPlot, id=plot.ID_PLOTS_HISTOGRAM)
             
-            # Boxplot
-            self.plotBoxplot = wx.MenuItem(self, plot.ID_PLOTS_BOXPLOT, 'Boxplot', 'Plots a series of boxplots; one per dimension')
-            self.plotSubmenu.AppendItem(self.plotBoxplot)
-            self.Bind(wx.EVT_MENU, self.OnPlot, id=plot.ID_PLOTS_BOXPLOT)
+            self.assignPlotMethods(dataPlots, self.plotSubmenu)
+            
             
         # Menu items specific to a clustering
         if ('dataItem' in kwargs and not kwargs['dataItem']):
-            # Bar plot
-            self.plotBarplot = wx.MenuItem(self, plot.ID_PLOTS_BARPLOT, 'Bar Plot', 'Plot the cluster percentages in bar plot form')
-            self.plotSubmenu.AppendItem(self.plotBarplot)
-            self.Bind(wx.EVT_MENU, self.OnPlot, id=plot.ID_PLOTS_BARPLOT)
+            self.assignPlotMethods(clusterPlots, self.plotSubmenu)
             
             # Cluster info
             self.info = wx.MenuItem(self, wx.NewId(), 'Info')
@@ -86,6 +82,36 @@ class TreePopupMenu(wx.Menu):
     def OnView(self, event):
         DataStore.view()
         
+    def assignPlotMethods(self, methods, menu):
+        """
+        Populate a menu with the supplied plotting methods.
+        
+        :@type methods: tuple
+        :@param methods: (strID, intID, title, description, ...)
+        :@type menu: wx.Menu
+        :@param menu: The menu to which the methods should be added. 
+        """
+        methods = list(methods)
+        builtins = [item for item in methods if not item[-1]] 
+        plugins = [item for item in methods if item[-1]]
+
+        for method in builtins:
+            menu.AppendItem(wx.MenuItem(self, method[1], method[2], method[3]))
+            self.Bind(wx.EVT_MENU, self.OnPlot, id=method[1])
+    
+        if len(plugins) > 0:
+            # Add a disabled menu item as a separator
+            item = wx.MenuItem(self, wx.ID_ANY, "---Plugins---")
+            item.Enable(False)
+            menu.AppendItem(item)
+            
+            for method in plugins:
+                menu.AppendItem(wx.MenuItem(self, method[1], method[2], method[3]))
+                self.Bind(wx.EVT_MENU, self.OnPlot, id=method[1])
+        
+    
+
+
 
 
 ID_PLOTS_DELETE     = wx.NewId()
