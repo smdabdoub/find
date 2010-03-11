@@ -9,9 +9,9 @@ This module contains classes and methods used to visualize FACS data.
 
 # Local imports
 from display.contextmenus import TreePopupMenu
-import display.plot
-from data import plot
 import cluster.methods
+import plot.methods as pmethods
+import plot.dialogs as pdialogs
 from store import DataStore
 from store import FacsData
 
@@ -25,13 +25,6 @@ import wx.lib.customtreectrl as CT
 # System imports
 
 
-
-
-# http://www.december.com/html/spec/color.html
-# red, irish-flag green, blue, ??, maroon6, yellow, teal....
-_manycolors = ['#FF0000','#009900','#0000FF','#00EEEE','#8E236B','#FFFF00',
-               '#008080',  'magenta', 'olive', 'orange', 'steelblue', 'darkviolet',
-               'burlywood','darkgreen','sienna','crimson']
 
 
 class PlotPanel(wx.Panel):
@@ -140,7 +133,7 @@ class FacsPlotPanel(PlotPanel):
                 self.PopupMenuXY(FigurePopupMenu(self), pt.x, pt.y)
                 
         
-    def addSubplot(self, dataStoreIndex, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER_2D):
+    def addSubplot(self, dataStoreIndex, clusteringIndex = None, plotType = pmethods.ID_PLOTS_SCATTER_2D):
         """
         Add a subplot to the figure.
         
@@ -242,7 +235,7 @@ class FacsPlotPanel(PlotPanel):
         self.setSelectedSubplot(currentSubplot)
             
     
-    def plotData(self, dataID, clusterID=None, plotType=plot.ID_PLOTS_SCATTER_2D):
+    def plotData(self, dataID, clusterID=None, plotType=pmethods.ID_PLOTS_SCATTER_2D):
         """
         Plots the specified data set to the currently selected subplot.
         
@@ -319,11 +312,17 @@ class FacsPlotPanel(PlotPanel):
         Display the properties dialog for the current subplot.
         """
         subplot = self.SelectedSubplot
-        dlg = display.plot.getPlotOptionsDialog(self, subplot)
-        if (dlg.ShowModal() == wx.ID_OK):
-            subplot.Options = dlg.Options
-            self.draw()
-        dlg.Destroy()
+        try:
+            dlg = pdialogs.getPlotOptionsDialog(self, subplot)
+            if (dlg.ShowModal() == wx.ID_OK):
+                subplot.Options = dlg.Options
+                self.draw()
+            dlg.Destroy()
+        except AttributeError:
+            dlg = wx.MessageDialog(None, 'There are no user-definable properties for this plot.',
+                                   'No Properties Dialog', wx.OK|wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
     
     
     
@@ -410,20 +409,8 @@ class FacsPlotPanel(PlotPanel):
         if (subplot.Title == ''):
             subplot.Title = subplot.DisplayName
         
-        #TODO: streamline this with a single generic plot method (see cluster)  
         # Plot data using available methods in data.plot
-        if (subplot.plotType == plot.ID_PLOTS_SCATTER_2D):
-            plot.scatterplot2D(subplot, self.figure, dims)
-
-        if (subplot.plotType == plot.ID_PLOTS_HISTOGRAM):
-            plot.histogram(subplot, self.figure, dims)
-            
-        if (subplot.plotType == plot.ID_PLOTS_BOXPLOT):
-            plot.boxplot(subplot, self.figure)
-            
-        if (subplot.plotType == plot.ID_PLOTS_BARPLOT):
-            plot.barplot(subplot, self.figure)
-        
+        pmethods.getMethod(subplot.plotType)(subplot, self.figure, dims)
         subplot.drawFlag = False
 
 
@@ -447,7 +434,7 @@ class Subplot(object):
     Represents a single subplot and the options necessary for specifying what is displayed.
     """
     
-    def __init__(self, n = None, dataStoreIndex = None, clusteringIndex = None, plotType = plot.ID_PLOTS_SCATTER_2D):
+    def __init__(self, n = None, dataStoreIndex = None, clusteringIndex = None, plotType = pmethods.ID_PLOTS_SCATTER_2D):
         self.n = n
         self.dataIndex = dataStoreIndex
         self.clustIndex = clusteringIndex
@@ -471,7 +458,6 @@ class Subplot(object):
             self.__dict__[key] = attrs[key]
 
 
-    # TODO: replace get/set with properties
     def getData(self):
         """
         Retrieve the data backing this subplot.
@@ -569,7 +555,6 @@ class Subplot(object):
 
 
 
-from display.dialogs import EditNameDialog
 from cluster.util import clusteringInfo
 class FacsTreeCtrlPanel(wx.Panel):
     def __init__(self, parent):
