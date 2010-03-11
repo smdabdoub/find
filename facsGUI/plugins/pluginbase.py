@@ -55,10 +55,10 @@ class Plugin(object):
     It should report a list of implemented methods it wants to make 
     available for use by the main program.
     
-    @rtype: list
+    @rtype: defined by plugin type
     @return: All the methods to be made available to the user as plugins.
     """
-    def register():
+    def register(self):
         pass
     
 
@@ -112,15 +112,34 @@ class IOPlugin(Plugin):
     """
     All IOPlugins are expected to provide methods for opening and/or saving 
     data files.
+    
+    Register method: returns a dictionary keyed on the FILE_INPUT and 
+    FILE_OUTPUT IDs (found in data.io) to indicate which (if any) methods
+    provide input and output functionality.
     """
-    def open(self, file):
+    def __init__(self, filename):
+        self.filename = filename
+    
+    def fileType(self):
+        """
+        Returns a string used for identifying the file type(s) this plugin is 
+        capable of reading/saving.
+        
+        ex: 'Comma Separated Values (*.csv)|*.csv' 
+        """
+        pass
+    
+    def read(self, file):
         """
         Given the specified path of a data file, input the data and return
-        it along with the column labels. 
+        it along with the column labels, and any annotations or analysis.
+        
+        :@rtype: tuple
+        :@return: (labels, data, annotations, analysis) 
         """
         pass
         
-    def save(self, file, data, labels):
+    def save(self, file, facsData):
         """
         Write the FACS data to the specified file.
         """
