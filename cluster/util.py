@@ -7,9 +7,11 @@ import data.handle as dh
 from data.store import FacsData
 from data.store import DataStore
 
-import numpy
+import numpy as np
 from numpy import random
 import Pycluster as pc
+
+import StringIO
 
 
 def isolateClusters(selection, datasetName):
@@ -75,9 +77,8 @@ def kinit (data, k, numLocalTrials=10):
     centers = [data[random.randint(n)]]
     closestDistSq = []; currPot = 0
     for x in data:
-        tmp = distSq(x-centers[0])
-        closestDistSq.append(tmp)
-        currPot += tmp
+        closestDistSq.append(distSq(x,centers[0]))
+        currPot += closestDistSq[-1]
 
     # Choose the other centers
     for _ in range(k-1):
@@ -104,7 +105,7 @@ def kinit (data, k, numLocalTrials=10):
 
     return centers
 
-
+memo = {}
 def distSq(p1, p2):
     """
     Returns the squared distance between two points in Euclidean space.
@@ -119,9 +120,15 @@ def distSq(p1, p2):
     @rtype: float
     @return: The distance squared between points p1 and p2.
     """
-    result = 0;
+    global memo
+    result = 0
     for i in range(len(p1)):
-        result += (p1[i] - p2[i])**2
+        sub = p1[i] - p2[i]
+        if sub in memo:
+            result += memo[sub]
+        else:
+            memo[sub] = sub**2
+            result += memo[sub]
 
     return result
 
@@ -139,9 +146,58 @@ def separate(data, ids):
     @rtype: list
     @return: A list of array objects representing clusters.
     """
-    clustIDs = numpy.unique1d(ids)
+    clustIDs = np.unique1d(ids)
     return [data[ids==id] for id in clustIDs]
 
+
+def nonSymmetricClusterDistance(c1, c2):
+    """
+    Determine a more accurate cluster distance than simple Euclidean distance
+    between cluster centers. This method is implemented as described in 
+    Bakker Schut et al., Cytometry 1992. The basic equation is:
+    
+    dc_i(C_1, C_2) = d_{ij} - (SVH_{i1} + SVL_{i1} + SVH_{i2} + SVL_{i2}
+    d_{ij} = | avg_i1 - avg_i2 |
+    
+    The original purpose was to effect a cluster joining criterion that would 
+    decrease with the number of particles to avoid large clusters absorbing
+    smaller outlying clusters. Also, that neighboring less dense clusters
+    would be readily merged. [Bakker Schut 1992]
+    
+    @type c1: array
+    @param c1: A cluster from the data
+    @type c2: array
+    @param c2: A cluster from the data 
+    
+    @rtype: float
+    @return: The distance between the two clusters as calculated by the algorithm
+    """
+    dims = c1.shape[1]
+    
+    # Calculate modified spread values. These are two values defined for each 
+    # cluster for each dimension as: SD/sqrt(N) where N is the number of events 
+    # higher and lower (respectively) than the cluster average
+    c1Avg = [np.mean(c1[:,i]) for i in range(dims)]
+    c2Avg = [np.mean(c2[:,i]) for i in range(dims)]
+    
+    # SVH: Spread Value High, SVL: Spread Value Low
+    c1SVHs = [np.std(c1[:,i])/len(c1[:,i][np.greater(c1[:,i],c1Avg[i])])**.5 
+              for i in range(dims)]
+    c1SVLs = [np.std(c1[:,i])/len(c1[:,i][np.less(c1[:,i],c1Avg[i])])**.5 
+              for i in range(dims)]
+
+    c2SVHs = [np.std(c2[:,i])/len(c2[:,i][np.greater(c2[:,i],c2Avg[i])])**.5 
+              for i in range(dims)]
+    c2SVLs = [np.std(c2[:,i])/len(c2[:,i][np.less(c2[:,i],c2Avg[i])])**.5 
+              for i in range(dims)]
+    
+    # Subtract each 
+    dist = sum([abs(c1Avg[i] - c2Avg[i]) - (c1SVHs[i] + c1SVLs[i] + c2SVHs[i] + c2SVLs[i])
+                for i in range(dims)])
+    
+    print dist
+
+    return dist
 
 
 def reassignClusterIDs(src, dst):
@@ -164,8 +220,8 @@ def reassignClusterIDs(src, dst):
     dstids = dstFCS.clustering[dst[1]]
     dstcenters = pc.clustercentroids(dstdata, clusterid=dstids)[0]
     
-    print "src centroids: ", srccenters
-    print "dst centroids: ", dstcenters
+    srcsep = separate(srcdata, srcids)
+    dstsep = separate(dstdata, dstids)
 
     centerEQ = {}
     taken = []
@@ -174,7 +230,7 @@ def reassignClusterIDs(src, dst):
         bestDist = -1
         for j,sc in enumerate(srccenters):
             if (j not in taken):
-                dist = distSq(sc, dc)
+                dist = nonSymmetricClusterDistance(dstsep[i], srcsep[j])#distSq(sc, dc)
                 if (bestDist < 0) or (dist < bestDist):
                     bestDist = dist
                     centerEQ[i] = j
@@ -184,7 +240,36 @@ def reassignClusterIDs(src, dst):
     tmp = [centerEQ[id] for id in dstids]
     DataStore.getData()[dst[0]].clustering[dst[1]] = tmp
             
-                
+
+def clusteringInfo(fData, id):
+        """
+        Creates a single string representing in a human-readable manner, the
+        options used to perform a particular clustering.
+        
+        @type fData: FacsData
+        @param fData: A FacsData instance containing the specified clustering 
+        @type id: int
+        @param id: The id of a clustering within the FacsData instance.
+        @rtype: str
+        @return: An easily understandable string representation of clustering options.
+        """
+        from cluster.dialogs import getClusterDialog
+        dlg = getClusterDialog(fData.methodIDs[id], None)
+        strOpts, strValues = dlg.getStrMethodArgs()
+        dlg.Destroy()
+        opts = fData.clusteringOpts[id]
+        info = StringIO.StringIO()
+        # create info string
+        for opt in opts:
+            info.write(strOpts[opt])
+            info.write(': ')
+            if (opt in strValues):
+                info.write(strValues[opt][opts[opt]])
+            else:
+                info.write(opts[opt])
+            info.write('\n')
+        
+        return info.getvalue()
                 
                  
             
