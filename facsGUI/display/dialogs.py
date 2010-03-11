@@ -8,7 +8,7 @@ This module contains all dialog classes necessary for non data-related menu item
 from cluster.util import separate
 from cluster.methods import getStringRepr
 from data.store import DataStore
-import data.view
+import plot.methods
 
 import math
 import wx
@@ -62,11 +62,11 @@ class SampleDataDisplayDialog(wx.Dialog):
         
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.dataGrid = DataGrid(self, data, labels)
-        self.chkApplyToAll = wx.CheckBox(self, wx.ID_ANY, 'Apply label text and column arrangement to all')
+        self.chkApplyToAll = wx.CheckBox(self, wx.ID_ANY, 'Apply to all files')
         
         self.sizer.Add(self.dataGrid, 1, wx.EXPAND)
         self.sizer.AddSpacer(10)
-        self.sizer.Add(self.chkApplyToAll, 0, wx.EXPAND)
+        self.sizer.Add(self.chkApplyToAll, 0, wx.EXPAND | wx.LEFT, 10)
         self.sizer.AddSpacer(5)
         self.sizer.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0, wx.EXPAND)
         self.sizer.AddSpacer(5)
@@ -102,7 +102,7 @@ class DimensionExclusionDialog(wx.Dialog):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.formSizer = wx.GridSizer(int(math.ceil(len(dimensions)/2.0)), 2, vgap=5, hgap=20) #rows,cols,vgap,hgap
         #self.formSizer = wx.GridSizer(len(dimensions), 1, vgap=5, hgap=20)
-        self.chkApplyToAll = wx.CheckBox(self, wx.ID_ANY, 'Apply selected dimensions to all')
+        self.chkApplyToAll = wx.CheckBox(self, wx.ID_ANY, 'Apply to all files')
         self.checkBoxes = []
         
         for dim in dimensions:
@@ -115,7 +115,7 @@ class DimensionExclusionDialog(wx.Dialog):
         #self.sizer.AddSpacer(20)
         self.sizer.Add(self.formSizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
         self.sizer.AddSpacer(20)
-        self.sizer.Add(self.chkApplyToAll, 0, wx.EXPAND)
+        self.sizer.Add(self.chkApplyToAll, 0, wx.EXPAND | wx.LEFT, 10)
         self.sizer.AddSpacer(5)
         self.sizer.Add(self.CreateButtonSizer(wx.OK), 0, wx.EXPAND)
         self.sizer.AddSpacer(5)
@@ -229,7 +229,7 @@ class ClusterInfoDialog(wx.Dialog):
                 self.formSizer.Add(self.radioList[i], 0, wx.EXPAND)
             # cluster color box
             label = wx.StaticText(self, -1, '', (20, 10))
-            label.SetBackgroundColour(data.view._manycolors[i])
+            label.SetBackgroundColour(plot.methods.plotColors[i])
             self.formSizer.Add(label, 1, wx.EXPAND)
             # % of total
             percent = float(len(cluster))/len(DataStore.getCurrentDataSet().data)*100
