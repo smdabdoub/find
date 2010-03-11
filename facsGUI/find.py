@@ -1,9 +1,12 @@
 from __future__ import with_statement
+from sets import ifilter
 __all__ = ['MainWindow']
 
 # Local imports
 import cluster.dialogs as cDlgs
 import cluster.methods as cMthds
+import plot.dialogs as pDlgs
+import plot.methods as pMthds
 import cluster.util as cUtil
 from display.dialogs import ClusterInfoDialog
 from display.dialogs import ClusterRecolorSelectionDialog
@@ -28,9 +31,7 @@ import math
 import sys
 import traceback
 
-#TODO: remove these where possible as they are rarely necessary
 # CONSTANTS
-
 # File Menu
 ID_OPEN       = wx.NewId()
 ID_LOAD_STATE = wx.NewId()
@@ -38,8 +39,6 @@ ID_SAVE_STATE = wx.NewId()
 
 # Plots Menu
 ID_PLOTS_ADD      = wx.NewId()
-ID_PLOTS_DELETE   = wx.NewId()
-ID_PLOTS_RENAME   = wx.NewId()
 ID_PLOTS_SETUP    = wx.NewId()
 ID_PLOTS_SAVE     = wx.NewId()
 
@@ -110,13 +109,25 @@ class MainWindow(wx.Frame):
         # File menu
         fileMenu = wx.Menu()
         # Open file
-        fileMenu.Append(ID_OPEN, "&Open File..."," Open a file to edit")
+        fileMenu.Append(ID_OPEN, "Open File...\tCtrl+O"," Open a file to edit")
         self.Bind(wx.EVT_MENU, self.onOpen, id=ID_OPEN)
         # Save/Load system state
-        fileMenu.Append(ID_SAVE_STATE, "Save project...","Save the state of the current analysis project.")
+        fileMenu.Append(ID_SAVE_STATE, "Save project...\tCtrl+S","Save the state of the current analysis project.")
         self.Bind(wx.EVT_MENU, self.OnSaveState, id=ID_SAVE_STATE)
-        fileMenu.Append(ID_LOAD_STATE, "Load project...","Load a saved analysis project.")
+        fileMenu.Append(ID_LOAD_STATE, "Load project...\tCtrl+L","Load a saved analysis project.")
         self.Bind(wx.EVT_MENU, self.OnLoadState, id=ID_LOAD_STATE)
+        # Export submenu
+        exportMenu = wx.Menu()
+        # gather all the IO classes capable of output
+        for entry in io.AvailableMethods().values():
+            # instantiate the IO class
+            c = entry[2]('')
+            if io.FILE_OUTPUT in c.register():
+                help = '' if c.__doc__ is None else c.__doc__.strip().split('\n')[0]
+                exportMenu.Append(entry[1], entry[0], help)
+                self.Bind(wx.EVT_MENU, self.onExport, id=entry[1])
+        fileMenu.AppendSubMenu(exportMenu, 'Export...', 'Save data and/or clustering items')
+        
         # Raise error
         error = wx.MenuItem(fileMenu, wx.NewId(), 'Raise error')
         fileMenu.AppendItem(error)
@@ -151,16 +162,11 @@ class MainWindow(wx.Frame):
         self.plotsMenu.Append(ID_PLOTS_SETUP, "Setup", 
                          " Indicate how the figure should be arranged in terms of subplots")
         self.Bind(wx.EVT_MENU, self.onSetupSubplots, id=ID_PLOTS_SETUP)
-        self.plotsMenu.Append(ID_PLOTS_SAVE, "&Save Figure", 
+        self.plotsMenu.Append(ID_PLOTS_SAVE, "Save Figure", 
                          " Export the figure as an image")
         self.Bind(wx.EVT_MENU, self.onSaveFigure, id=ID_PLOTS_SAVE)
-#        self.plotsMenu.AppendSeparator()
-        self.plotsMenu.Append(ID_PLOTS_ADD, "&Add Subplot", " Add a subplot to the current figure")
+        self.plotsMenu.Append(ID_PLOTS_ADD, "Add Subplot", " Add a subplot to the current figure")
         self.Bind(wx.EVT_MENU, self.onAddSubplot, id=ID_PLOTS_ADD)
-#        self.plotsMenu.Append(ID_PLOTS_DELETE, "&Delete Subplot", " Delete the selected subplot")
-#        self.Bind(wx.EVT_MENU, self.onDeleteSubplot, id=ID_PLOTS_DELETE)
-#        self.plotsMenu.Append(ID_PLOTS_RENAME, "Rename Subplot", " Rename the selected subplot")
-#        self.Bind(wx.EVT_MENU, self.onRenameSubplot, id=ID_PLOTS_RENAME)
         
         # Plugin menu
         self.pluginsMenu = self.generatePluginsMenu()
@@ -216,12 +222,12 @@ class MainWindow(wx.Frame):
     #TODO: move at least part of this to the plugin module
     def generatePluginsMenu(self):
         pluginsMenu = wx.Menu()
-        submenus = []
+        submenus = {}
         for type_ in plugin.pluginTypes:
-            submenus.append(wx.Menu())
+            submenus[type_] = wx.Menu()
         
         # Add loaded plugins to the submenus
-        for i, type_ in enumerate(plugin.loaded):
+        for type_ in plugin.loaded:
             for module in plugin.loaded[type_]:
                 try:
                     pluginMethods = module.__all__
@@ -232,33 +238,53 @@ class MainWindow(wx.Frame):
                 # Clustering plugins
                 if type_ == plugin.pluginTypes[0]:
                     for method in pluginMethods:
-                        ID = wx.NewId()
+                        cID = wx.NewId()
                         cmethod, cdialog = eval('module.'+method)()
                         doc = cmethod.__doc__.split(';')
                         name = doc[0].strip()
                         descr = doc[1].strip()
-                        cMthds.addPluginMethod((ID, name, descr, cmethod, True))
-                        cDlgs.addPluginDialogs(ID, cdialog)
+                        cMthds.addPluginMethod((cID, name, descr, cmethod, True))
+                        cDlgs.addPluginDialog(cID, cdialog)
                         # Create the menu item
-                        submenus[i].Append(ID, name, descr)
-                        self.Bind(wx.EVT_MENU, self.onCluster, id=ID)
+                        submenus[type_].Append(cID, name, descr)
+                        self.Bind(wx.EVT_MENU, self.onCluster, id=cID)
+                # Plotting plugins
+                elif type_ == plugin.pluginTypes[3]:
+                    for method in pluginMethods:
+                        pID = wx.NewId()
+                        pmethod, pdialog, dtypes = eval('module.'+method)()
+                        doc = pmethod.__doc__.split(';')
+                        strID = doc[0].strip()
+                        name  = doc[1].strip()
+                        descr = doc[2].strip()
+                        pMthds.addPluginMethod((strID, pID, name, descr, pmethod, dtypes, True))
+                        pDlgs.addPluginDialog(strID, pdialog)
+                        # Create a disabled menu item to indicate plugin was loaded
+                        item = wx.MenuItem(submenus[type_], pID, name, descr)
+                        item.Enable(False)
+                        submenus[type_].AppendItem(item)
+                # I/O plugins
+                elif type_ == plugin.pluginTypes[4]:
+                    for method in pluginMethods:
+                        name, cls = eval('module.'+method)()
+                        ci = cls('')
+                        descr = ' '.join(name, 'plugin') if ci.__doc__ is None \
+                                else ci.__doc__.strip().split('\n')[0]
+                        io.addPluginMethod((name, wx.NewId(), cls, True))
+                        # Create a disabled menu item to indicate plugin was loaded
+                        item = wx.MenuItem(submenus[type_], wx.ID_ANY, name, descr)
+                        item.Enable(False)
+                        submenus[type_].AppendItem(item)
                 
         
         # Add submenus to main menu
-        for i, menu in enumerate(submenus):
-            pluginsMenu.AppendSubMenu(menu, plugin.pluginTypes[i].capitalize())
+        for type_ in plugin.pluginTypes:
+            pluginsMenu.AppendSubMenu(submenus[type_], type_.capitalize())
         
         return pluginsMenu
         
     
-    ## EVENT HANDLING ##
-    def OnPluginAction(self, event):
-        """
-        This method acts as a passthrough for handling user requests for plugins.
-        Each plugin-type will be handled by the appropriate module.
-        """
-        pass        
-    
+    ## EVENT HANDLING ##     
     def OnRaiseError(self, event):
         raise Exception("Test exception raised") 
     
@@ -297,8 +323,9 @@ class MainWindow(wx.Frame):
         
         @see: L{data.handle.loadFacsCSV} for details on what types of files can be loaded
         """
-        #TODO: Move the formats list to the data.io module
-        formats = "Binary FCS (*.fcs)|*.fcs|Comma Separated Values (*.csv)|*.csv"
+        # retrieve the I/O methods for inputting files
+        inputMethods = [m[2]('') for m in io.AvailableMethods().values()]
+        formats = '|'.join([m.fileType() for m in inputMethods if io.FILE_INPUT in m.register()])
         allLabels = []
         allColArr = []
         allDims   = []
@@ -316,7 +343,7 @@ class MainWindow(wx.Frame):
             for n, path in enumerate(dlg.Paths):
                 self.statusbar.SetStatusText('loading: ' + path, 0)
                 #TODO: include data annotations
-                (labels, data) = io.loadDataFile(path)
+                (labels, data, annotations) = io.loadDataFile(path)
                 
                 # Give the user a brief preview of the data (10 rows) and allow
                 # column rearrangement and renaming
@@ -371,6 +398,9 @@ class MainWindow(wx.Frame):
             self.treeCtrlPanel.updateTree()
             
         dlg.Destroy()
+        
+    def onExport(self, event):
+        event.GetId()
         
     
     def OnSaveState(self, event):
@@ -469,26 +499,6 @@ class MainWindow(wx.Frame):
             self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex())
         else:
             self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex(), clusteringIndex)
-    
-    #TODO: remove
-    def onDeleteSubplot(self, event):
-        """
-        Instructs the FacsPlotPanel instance to remove the currently selected subplot.
-        """
-        self.facsPlotPanel.deleteSubplot()
-    
-    #TODO: remove
-    def onRenameSubplot(self, event):
-        """
-        Allows the user to set the title of the selected subplot.
-        """
-        subplot = self.facsPlotPanel.subplots[self.facsPlotPanel.selectedSubplot-1]
-        titleDlg = EditNameDialog(self, subplot.Title.split(':')[1].strip())
-        if (titleDlg.ShowModal() == wx.ID_OK):
-            subplot.Title = titleDlg.Text
-            self.facsPlotPanel.draw()
-        
-        titleDlg.Destroy()
         
         
     def onSetupSubplots(self, event):
