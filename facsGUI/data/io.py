@@ -2,55 +2,20 @@ from __future__ import with_statement
 """
 """
 from data.store import DataStore, FacsData
-from ReadFCS.fcs import FCSReader
-from IO.readFCS import FCSreader
-from error import InvalidDataFile 
+from IO import fcs
+from error import UnknownFileType 
 
-from matplotlib import mlab
 import numpy as np
+import wx
 
 import os
 
-# assume first line contains column labels
-def loadCSV(filename):
-    """
-    Load the specified FACS data file.
-    
-    Note: currently only ASCII csv data files are accepted, 
-    and not binary FCS files.
-    
-    @type filename: string
-    @param filename: The name of the FACS data file to be loaded
-    
-    @rtype: tuple
-    @return: A tuple containing a list of column labels and numpy array 
-        containing the actual FACS data.
-    """
-    print 'loading:',filename
-    # Retrieve first line of column labels
-    facsFile = open(filename,'r')
-    labels = facsFile.readline().rstrip().replace('"','').split(',')
-    facsFile.close()
-    print 'Column labels:',labels
-    # load actual data
-    data = mlab.load(filename, delimiter=',', skiprows=1)
-    return (labels,data)
+FILE_INPUT = True
+FILE_OUTPUT = False
 
-
-def loadFCS(filename):
-    fcsReader = FCSReader(filename)
-    data = np.column_stack(tuple(fcsReader.data[col] for col in fcsReader.names))
-    return (fcsReader.names, data)
-
-def loadFCS_New(filename):
-    fcsReader = FCSreader(filename)
-    info = fcsReader.get_FCMdata()
-    #data = np.column_stack(tuple(fcsReader.data[col] for col in fcsReader.names))
-    return (info[2], info[1])
-
-
-# One-stop loader for all file types
-fileTypes = {'csv': loadCSV, 'fcs': loadFCS_New}
+methods = {}
+methods['fcs'] = ('fcs', wx.NewId(), fcs.FCSreader, False)
+#methods['csv'] = ('csv', loadCSV, FILE_INPUT, 'Comma Separated Values (*.csv)|*.csv', False)
 
 def loadDataFile(filename):
     """
@@ -64,12 +29,80 @@ def loadDataFile(filename):
     """
     fileType = filename.split('.')[-1]
     
-    if (fileType in fileTypes):
-        return fileTypes[fileType](filename)
+    if (fileType in methods):
+        c = methods[fileType][2](filename)
+        return c.register()[FILE_INPUT]()
     
-    raise InvalidDataFile(filename)
+    raise UnknownFileType(filename)
 
 
+#TODO: implement
+def exportDataFile(eID, facs):
+    """
+    Passes the given FacsData instance to the specified IO class.
+    
+    :@type eID: int
+    :@param eID: The int ID associated with the user-selected export format.
+    :@type facs: data.store.FacsData
+    :@param facs: The FacsData instance that will be handed to the IO method.
+    """
+    pass
+
+
+def addPluginMethod(descriptor):
+    """
+    Adds an I/O method to the list of available methods.
+    
+    :@type descriptor: tuple
+    :@param descriptor: A descriptor tuple as described in AvailableMethods()
+    """
+    global methods
+    methods[descriptor[0]] = descriptor
+    
+def AvailableMethods():
+    """
+    Retrieve the list of available I/O methods in this module.
+    
+    @rtype: list of tuples
+    @return: A list of descriptors with the following in order:
+        - ID (str)
+        - method
+        - I/O ID: method is meant to input or output files (FILE_INPUT or FILE_OUTPUT)
+        - file type (str): 'File type description (*.extension)|*.extension'
+        - plugin flag
+    """
+    return methods
+
+def getMethod(id):
+    """
+    Retrieve an I/O class by its ID.
+    
+    :@type id: int or str
+    :@param id: The identifier for an I/O class.
+    :@rtype: class
+    :@return: The class associated with the ID, or None.
+    """
+    try:
+        int(id)
+    except ValueError:
+        return methods[id][2]
+        
+    return methods[strID(id)][2]
+    
+    
+def strID(methodID):
+    """
+    Get the sting ID  method by its ID.
+    
+    @type methodID: int
+    @param methodID: One of the module-defined ID_* constants for the available methods.
+    @rtype: string
+    @return: The name of the specified plotting algorithm
+    """
+    if (methodID is not None):
+        for id in methods:
+            if methods[id][1] == methodID:
+                return methods[id][0]
 
 
 #from IO.dbdict import dbopen
