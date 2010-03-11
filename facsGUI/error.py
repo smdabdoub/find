@@ -8,11 +8,19 @@ import wx
 
 NO_NETWORK_CONNECTIVITY = 1
 
-class InvalidDataFile(Exception):
+class UnknownFileType(Exception):
     def __init__(self, filename):
         self.filename = filename
     def __str__(self):
         return "Tried to open %s.\nValid files must end in .csv or .fcs" % self.filename
+    
+class InvalidDataFile(Exception):
+    def __init__(self, filename, msg):
+        self.filename = filename
+        self.msg = msg
+        
+    def __str__(self):
+        return "Error opening %s: \n" % (self.filename, self.msg)
     
 class InvalidPlotType(Exception):
     """
