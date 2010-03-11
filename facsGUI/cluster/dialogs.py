@@ -11,15 +11,10 @@ import display.customsizers as customsizers
 import methods
 import wx
 
-ID_TXT_NUM_CLUSTERS   = wx.NewId()
-ID_CBX_METHOD         = wx.NewId()
-ID_TXT_NUM_PASSES     = wx.NewId()
-ID_CHK_INITIAL_CENTERS = wx.NewId()
-
 dialogs = {}
 
 
-def addPluginDialogs(ID, dialog):
+def addPluginDialog(ID, dialog):
     global dialogs
     dialogs[ID] = dialog
     
@@ -58,10 +53,10 @@ class KMeansDialog(ClusterOptionsDialog):
         self.CenterOnParent()
         
         # create form controls
-        self.txtNumClusters   = wx.TextCtrl(self, ID_TXT_NUM_CLUSTERS, '3', size=(50,20))
-        self.cbxMethod        = wx.ComboBox(self, ID_CBX_METHOD, 'Mean', (-1,-1), (160, -1), ['Mean','Median'], wx.CB_READONLY)
-        self.txtNumPasses     = wx.TextCtrl(self, ID_TXT_NUM_PASSES, '5', size=(50,20))
-        self.chkInitialCenters = wx.CheckBox(self, ID_CHK_INITIAL_CENTERS, 'Manually select centers?')
+        self.txtNumClusters   = wx.TextCtrl(self, wx.ID_ANY, '3', size=(50,20))
+        self.cbxMethod        = wx.ComboBox(self, wx.ID_ANY, 'Mean', (-1,-1), (160, -1), ['Mean','Median'], wx.CB_READONLY)
+        self.txtNumPasses     = wx.TextCtrl(self, wx.ID_ANY, '5', size=(50,20))
+        self.chkInitialCenters = wx.CheckBox(self, wx.ID_ANY, 'Manually select centers?')
         self.initialCenters = []
         
         self.chkInitialCenters.Bind(wx.EVT_CHECKBOX, self.chkInitialCenters_Click)
