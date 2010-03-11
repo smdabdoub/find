@@ -8,6 +8,10 @@ This module contains classes used for storing FACS data.
 
 from operator import itemgetter
 
+ID_DATA_ITEM = 0
+ID_CLUSTERING_ITEM = 1
+ID_TRANSFORMATION_ITEM = 2
+
 class DataStore(object):
     """
     DataStore is meant to be used as a pseudo-database of FacsData objects.
@@ -178,11 +182,13 @@ class FacsData(object):
     """
     The FacsData class holds all information regarding a single FACS dataset.
     """
-    def __init__(self, filename, labels, data, parent = None):
+    def __init__(self, filename, labels, data, annotations=None, analysis=None, parent=None):
         self.filename = filename
         self.displayname = filename
         self.labels = labels
         self.data = data
+        self.annotations = annotations
+        self.analysis = analysis
         self.ID = None
         self.parent = parent
         self.children = []
