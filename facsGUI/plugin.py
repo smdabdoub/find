@@ -20,7 +20,6 @@ def discoverPlugins():
     @rtype: dict
     @return: A dictionary of plugins keyed on their type.
     """
-    # TODO: Figure out what the path looks like on Win and add cases.
     availablePlugins = {}
     pluginDir = 'plugins'
     #basePluginPath = sys.path[0]
