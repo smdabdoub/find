@@ -559,13 +559,13 @@ class MainWindow(wx.Frame):
         """
         info = wx.AboutDialogInfo()
         info.Name = "FIND: Flow Investigation using N-Dimensions"
-        info.Version = "0.1"
+        info.Version = "0.2"
         info.Copyright = "(C) Shareef Dabdoub"
         info.Description = wordwrap(
             "This application allows for the display, clustering, and general analysis of "
             "n-dimensional FACS data",
             500, wx.ClientDC(self.facsPlotPanel))
-        info.WebSite = ("http://justicelab.org/fwac", "FWAC Main Site")
+        info.WebSite = ("http://justicelab.org/find", "FIND Main Site")
         info.Developers = ["Shareef Dabdoub"]
         #info.License = wordwrap("Pay me one MILLLLLLLION dollars!!!", 500, wx.ClientDC(self.facsPlotPanel))
         # Show the wx.AboutBox
