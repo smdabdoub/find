@@ -7,7 +7,6 @@ from display.dialogs import ClusterInfoDialog
 import wx
 
 from itertools import ifilter
-from sets import ifilterfalse
 
 class TreePopupMenu(wx.Menu):
     def __init__(self, parent, **kwargs):
