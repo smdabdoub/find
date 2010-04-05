@@ -45,12 +45,14 @@ def kmeans(data, **kwargs):
         initialCenters = kwargs['initialCenters']
     if 'smartCenters' in kwargs.keys():
         smartCenters = kwargs['smartCenters']
-        
+    
+    
+    logData = np.log10(np.clip(data, a_min=0.0001, a_max=np.max(np.maximum.reduce(data))))
     if not initialCenters:
-        (clusterIDs, err, nOpt) = pc.kcluster(data, k, npass=npasses, method=method)
+        (clusterIDs, err, nOpt) = pc.kcluster(logData, k, npass=npasses, method=method)
         msg = "Number of rounds optimal solution was found: %i" % nOpt
     else:
         print "Using manually chosen centers:\n", initialCenters
-        (centroids, clusterIDs) = kmeans2(data, np.array(initialCenters), minit='matrix')
+        (centroids, clusterIDs) = kmeans2(logData, np.array(initialCenters), minit='matrix')
     
     return clusterIDs, msg
