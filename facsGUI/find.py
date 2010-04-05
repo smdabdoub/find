@@ -62,6 +62,7 @@ class MainWindow(wx.Frame):
         self.dirname=''
         
         self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D)
+        self.splitter.SetBackgroundColour((150, 150, 150))
         self.rightPanel = wx.Panel(self.splitter)
         self.facsPlotPanel = dv.FacsPlotPanel(self.rightPanel)
         self.treeCtrlPanel = dv.FacsTreeCtrlPanel(self.splitter)
@@ -91,7 +92,7 @@ class MainWindow(wx.Frame):
         #self.dataSizer.Add(self.chkLinked, False, wx.EXPAND)
         self.dataSizer.Add(self.selectorSizer, False, wx.EXPAND | wx.TOP, 5)
         
-        self.rightPanel.SetBackgroundColour("white")
+        self.rightPanel.SetBackgroundColour((100, 100, 100))
         self.rightPanel.SetSizer(self.dataSizer)        
         self.splitter.SetMinimumPaneSize(20)
         self.splitter.SplitVertically(self.treeCtrlPanel, self.rightPanel, 150)
