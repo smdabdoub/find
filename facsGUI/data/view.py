@@ -47,7 +47,7 @@ class PlotPanel(wx.Panel):
         self.figure.subplots_adjust(wspace=0.5, hspace=0.5)
         self.canvas = FigureCanvas(self, -1, self.figure)
         self._setColor(color)
-        self.SetBackgroundColour("white")
+        self.SetBackgroundColour((100, 100, 100))
         
         self._resizeflag = True
         self._setSize()
@@ -107,9 +107,8 @@ class FacsPlotPanel(PlotPanel):
     The main display figure for the FACS data.
     """
     
-    def __init__(self, parent, selectedAxes = [], colors = [], **kwargs):
+    def __init__(self, parent, selectedAxes = None, **kwargs):
         self.updateAxes(selectedAxes)
-        self.color_list = colors
         self.subplots = []
         self.subplotRows = 1
         self.subplotCols = 1
@@ -118,7 +117,7 @@ class FacsPlotPanel(PlotPanel):
 
         # initiate plotter
         PlotPanel.__init__( self, parent, **kwargs )
-        self._setColor((255,255,255))
+        self._setColor((100,100,100))
         self.figure.canvas.mpl_connect('button_press_event', self.OnClick)
         
         
@@ -337,7 +336,7 @@ class FacsPlotPanel(PlotPanel):
         @type redraw: bool 
         @param redraw: A boolean indicating whether or not to redraw the figure.
         """
-        if (len(selectedAxes) >= 2):
+        if (selectedAxes is not None and len(selectedAxes) >= 2):
             self.XAxisColumn = selectedAxes[0]
             self.YAxisColumn = selectedAxes[1]
             
