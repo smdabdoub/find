@@ -79,21 +79,26 @@ def reorderColumns(data, columnOrder):
     
     return numpy.column_stack(tuple([data[:,i] for i in columnOrder]))
 
-
+#TODO: check this for dicts
 def mergeData(clusters, data):
     """
     Combine the specified clusters into one data array.
     
-    :@type clusters: list
+    :@type clusters: collection
     :@param clusters: The IDs of the clusters to merge.
-    :@type data: list or array
+    :@type data: list/array or dict
     :@param data: The data pre-separated into clusters.
     
     :@rtype: array
     :@return: A new data array containing the merged clusters.
     """
-    rows = sum([len(data[i]) for i in clusters])
-    cols = len(data[i][0])
+    if type(data) is dict:
+        rows = sum([data[i].shape[0] for i in clusters])
+        cols = data[i].shape[1]
+    else:
+        rows = sum([len(data[i]) for i in clusters])
+        cols = len(data[i][0])
+    
     cat = tuple([data[i] for i in clusters])
     return numpy.concatenate(cat).reshape(rows, cols)
 
