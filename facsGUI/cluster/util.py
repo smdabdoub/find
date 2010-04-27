@@ -37,6 +37,7 @@ def isolateClusters(selection, datasetName):
         DataStore.add(newFACSData)
 
 
+import scipy.spatial.distance as ssd
 def kinit (data, k, numLocalTrials=10):
     """
     Attempts to choose optimal cluster centers for use with the k-means algorithm [Arthur 2007].
@@ -75,10 +76,8 @@ def kinit (data, k, numLocalTrials=10):
 
     # Choose one random center and calc the distSq to the rest of the points
     centers = [data[random.randint(n)]]
-    closestDistSq = []; currPot = 0
-    for x in data:
-        closestDistSq.append(distSq(x,centers[0]))
-        currPot += closestDistSq[-1]
+    closestDistSq = ssd.cdist(np.reshape(centers[0],(1,data.shape[1])), data, 'sqeuclidean')
+    currPot = np.sum(closestDistSq)
 
     # Choose the other centers
     for _ in range(k-1):
@@ -87,13 +86,13 @@ def kinit (data, k, numLocalTrials=10):
         for _ in range(numLocalTrials):
             randVal = random.random() * currPot
             for index in xrange(n):
-                if (randVal <= closestDistSq[index]):                
+                if (randVal <= closestDistSq[0,index]):                
                     break
                 else:
-                    randVal -= closestDistSq[index]
+                    randVal -= closestDistSq[0,index]
                     
             # Compute new potential
-            newPot = sum([min(distSq(data[i], data[index]), closestDistSq[i]) for i in xrange(n)])
+            newPot = np.sum(np.minimum(ssd.cdist(np.reshape(data[index],(1,data.shape[1])), data, 'sqeuclidean'), closestDistSq))
             
             # store best results
             if (bestNewPot < 0 or newPot < bestNewPot):
@@ -101,36 +100,30 @@ def kinit (data, k, numLocalTrials=10):
     
         centers.append (data[bestNewIndex])
         currPot = bestNewPot
-        closestDistSq = [min(distSq(data[i], data[bestNewIndex]), closestDistSq[i]) for i in xrange(n)]        
+        closestDistSq = np.minimum(ssd.cdist(np.reshape(data[bestNewIndex],(1,data.shape[1])), data, 'sqeuclidean'), closestDistSq)        
 
     return centers
 
-memo = {}
-def distSq(p1, p2):
+def distSq(a, b):
     """
-    Returns the squared distance between two points in Euclidean space.
+    Returns the squared distance between two n-dimensional points in 
+    Euclidean space.
     
-    Both points must have the same dimensionality.
+    Note: This method should only be used if speed is not an issue. 
+          The distance calculation methods in scipy.spatial.distance
+          are faster and provide more flexibility.
     
-    @type p1: list
-    @param p1: A list of size n representing a point in n-dimensional space.
-    @type p2: list
-    @param p2: A list of size n representing a point in n-dimensional space.
+    @type a: numpy.ndarray
+    @param a: A numpy array of size n representing a point in n-dimensional space.
+    @type b: numpy.ndarray
+    @param b: A numpy array of size n representing a point in n-dimensional space.
     
     @rtype: float
     @return: The distance squared between points p1 and p2.
     """
-    global memo
-    result = 0
-    for i in range(len(p1)):
-        sub = p1[i] - p2[i]
-        if sub in memo:
-            result += memo[sub]
-        else:
-            memo[sub] = sub**2
-            result += memo[sub]
+    diff = a-b
+    return np.sum(diff*diff)
 
-    return result
 
 
 def separate(data, ids):
@@ -156,7 +149,7 @@ def nonSymmetricClusterDistance(c1, c2):
     between cluster centers. This method is implemented as described in 
     Bakker Schut et al., Cytometry 1992. The basic equation is:
     
-    dc_i(C_1, C_2) = d_{ij} - (SVH_{i1} + SVL_{i1} + SVH_{i2} + SVL_{i2}
+    dc_i(C_1, C_2) = d_{ij} - (SVH_{i1} + SVL_{i1} + SVH_{i2} + SVL_{i2})
     d_{ij} = | avg_i1 - avg_i2 |
     
     The original purpose was to effect a cluster joining criterion that would 
@@ -192,10 +185,8 @@ def nonSymmetricClusterDistance(c1, c2):
               for i in range(dims)]
     
     # Subtract each 
-    dist = sum([abs(c1Avg[i] - c2Avg[i]) - (c1SVHs[i] + c1SVLs[i] + c2SVHs[i] + c2SVLs[i])
+    dist = np.sum([abs(c1Avg[i] - c2Avg[i]) - (c1SVHs[i] + c1SVLs[i] + c2SVHs[i] + c2SVLs[i])
                 for i in range(dims)])
-    
-    print dist
 
     return dist
 
@@ -230,7 +221,7 @@ def reassignClusterIDs(src, dst):
         bestDist = -1
         for j,sc in enumerate(srccenters):
             if (j not in taken):
-                dist = nonSymmetricClusterDistance(dstsep[i], srcsep[j])#distSq(sc, dc)
+                dist = nonSymmetricClusterDistance(dstsep[i], srcsep[j])
                 if (bestDist < 0) or (dist < bestDist):
                     bestDist = dist
                     centerEQ[i] = j
@@ -272,10 +263,18 @@ def clusteringInfo(fData, id):
         return info.getvalue()
                 
                  
-            
+
+def main():
+    from data.io import loadDataFile
+    f = loadDataFile('/data/537-Filter-Spin_MMC-Top.fcs')
+    data = f[1]
+    kinit(data, 200)
+    
 
 
-
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())
 
 
 
