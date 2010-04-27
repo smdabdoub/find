@@ -46,10 +46,10 @@ def bakker_kMeans(data, **kwargs):
     _, ids = kmeans2(logData, np.array(centers), minit='matrix')
     
     # Merge clusters w/special comparison metric until user cluster # achieved
-    clusters = util.separate(data, ids)
-    final = merge(k, ids, clusters)
+    clusters = util.separate(logData, ids)
+    finalIDs = merge(k, ids, clusters)
     
-    return final, msg
+    return finalIDs, msg
     
 
 def merge(limit, ids, clusters, dist=None, minpair=None, newID=None):
@@ -99,7 +99,7 @@ def merge(limit, ids, clusters, dist=None, minpair=None, newID=None):
         if id in minpair:
             ids[i] = newID 
     
-    return merge(limit, clusters, ids, dist, minpair, newID)
+    return merge(limit, ids, clusters, dist, minpair, newID)
     
     
         
@@ -146,16 +146,21 @@ def updateDistMatrix(clusters, matrix, remIDs, newID):
     :@type newID: int
     :@param newID: The id of the replacement cluster.
     """
+    # remove rows
+    for i in remIDs:
+        del matrix[i]
+    
     for i in np.sort(clusters.keys()):
-        # remove the old cluster distance calculations
-        if not i in remIDs:
+        # remove the old cluster distance calculations (columns)
+        if i != newID:
             for j in remIDs:
                 if j in matrix[i]:
                     del matrix[i][j]
             # calculate distances to the new cluster
             matrix[i][newID] = util.nonSymmetricClusterDistance(clusters[i], clusters[newID])
-        else:
-            del matrix[i]
+    
+    # Add empty distance dict for later updates
+    matrix[newID] = {}
     
     # calculate the minpair: 
     # inner min finds the minpairs for each row, outer min finds overall minpair 
