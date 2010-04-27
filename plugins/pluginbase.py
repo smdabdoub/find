@@ -62,8 +62,6 @@ class Plugin(object):
         pass
     
 
-#TODO: Consider making a dialog-creator class that would get around the need to import wx
-#TODO: Figure out how to make an egg (jar) of FWAC so this class doesn't need to be duplicated
 class ClusterOptionsDialog(wx.Dialog):
     """
     Provides a base options dialog to specify a consistent interface for
