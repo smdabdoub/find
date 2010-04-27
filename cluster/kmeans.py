@@ -15,7 +15,7 @@ def kmeans(data, **kwargs):
     @param data: The data to be clustered
     @type kwargs: dict
     @param kwargs: The following args are accepted:
-        - k: The number of clusters to form (returned number of clusters may be less than k).
+        - numClusters: The number of clusters to form (returned number of clusters may be less than k).
         - npasses: The number of times the k-means clustering algorithm is performed, 
         each time with a different (random) initial condition.
         - method: describes how the center of a cluster is found: 
