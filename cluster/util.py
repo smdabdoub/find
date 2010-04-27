@@ -167,28 +167,49 @@ def nonSymmetricClusterDistance(c1, c2):
     """
     dims = c1.shape[1]
     
-    # Calculate modified spread values. These are two values defined for each 
-    # cluster for each dimension as: SD/sqrt(N) where N is the number of events 
-    # higher and lower (respectively) than the cluster average
     c1Avg = [np.mean(c1[:,i]) for i in range(dims)]
     c2Avg = [np.mean(c2[:,i]) for i in range(dims)]
     
-    # SVH: Spread Value High, SVL: Spread Value Low
-    c1SVHs = [np.std(c1[:,i])/len(c1[:,i][np.greater(c1[:,i],c1Avg[i])])**.5 
-              for i in range(dims)]
-    c1SVLs = [np.std(c1[:,i])/len(c1[:,i][np.less(c1[:,i],c1Avg[i])])**.5 
-              for i in range(dims)]
-
-    c2SVHs = [np.std(c2[:,i])/len(c2[:,i][np.greater(c2[:,i],c2Avg[i])])**.5 
-              for i in range(dims)]
-    c2SVLs = [np.std(c2[:,i])/len(c2[:,i][np.less(c2[:,i],c2Avg[i])])**.5 
-              for i in range(dims)]
+    c1SV = nsSpreadValue(c1, c1Avg)
+    c2SV = nsSpreadValue(c2, c2Avg)
     
     # Subtract each 
-    dist = np.sum([abs(c1Avg[i] - c2Avg[i]) - (c1SVHs[i] + c1SVLs[i] + c2SVHs[i] + c2SVLs[i])
+    dist = np.sum([abs(c1Avg[i] - c2Avg[i]) - (c1SV['h'][i] + c1SV['l'][i] + c2SV['h'][i] + c2SV['l'][i])
                 for i in range(dims)])
 
     return dist
+
+
+def nsSpreadValue(c, avg):
+    """
+    Calculate modified (for nonsymmetric clusters) spread values for clusters  
+    as defined in Bakker Schut et al., Cytometry 1992. These are two values 
+    defined for each cluster for each dimension as: SD/sqrt(N) where N is the 
+    number of events higher and lower (respectively) than the cluster average 
+    and SD is the Std. Dev. for those events. 
+    
+    :@type c: list
+    :@param c: The list of n-dimensional arrays corresponding to points in 
+               the cluster
+    :@type avg: list
+    :@param avg: The dimension-wise averages for c
+    
+    :@rtype: dict
+    :@return: A dict with keys 'h' and 'l' containing the high and low spread 
+              values as n-dimensional lists
+    """
+    dims = c.shape[1]
+    if c.shape[0] > 1:
+        cHs   = [c[:,i][np.greater(c[:,i],avg[i])] for i in range(dims)]
+        cLs   = [c[:,i][np.less(c[:,i],avg[i])] for i in range(dims)]    
+        cSVHs = [0 if not len(cHs[i]) > 0 else np.std(cHs[i])/len(cHs[i])**.5 for i in range(dims)]
+        cSVLs = [0 if not len(cLs[i]) > 0 else np.std(cLs[i])/len(cLs[i])**.5 for i in range(dims)]
+    else:
+        cSVHs = np.zeros(dims)
+        cSVLs = np.zeros(dims)
+        
+    return {'h': cSVHs, 'l': cSVLs}
+    
 
 
 def reassignClusterIDs(src, dst):
