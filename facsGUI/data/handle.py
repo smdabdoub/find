@@ -1,7 +1,6 @@
 """
 This module contains various methods for handling FACS data.
 """
-from matplotlib import mlab
 import math
 import numpy
 
@@ -21,40 +20,6 @@ def filterData(data, selDims):
         return data[:, selDims]
     return data
     
-    
-def closestPoints(data, pts):
-    """
-    Given a list of n-dimensional points and an n-dimensional 
-    data matrix, this method will find the points within the matrix
-    that are the closest to each of the points in the list.
-    
-    @type data: array
-    @var data: An n-dimensional array of points in Euclidean space
-    @type pts: list
-    @var pts: A list of n-dimensional points in Euclidean space
-    @rtype: list
-    @return: A list of the points in data closest to the respective points 
-             in pts
-    """
-    closestPts = {}
-    
-    for pt in pts:
-        closestPts[pt] = None
-        for row in data:
-            dist = distance(pt, row)
-            if (closestPts[pt] is not None and dist < closestPts[pt]):
-                closestPts[pt] = (dist, row)
-    
-    return [closestPts[pt][1] for pt in closestPts]
-    
-    
-        
-
-def distance(pt1, pt2):
-    """
-    Finds the Euclidean distance between multidimensional points
-    """
-    return math.sqrt(sum([(pt1[i]-pt2[i])**2 for i in range(len(pt1))]))
     
 
 def reorderColumns(data, columnOrder):
@@ -79,7 +44,7 @@ def reorderColumns(data, columnOrder):
     
     return numpy.column_stack(tuple([data[:,i] for i in columnOrder]))
 
-#TODO: check this for dicts
+
 def mergeData(clusters, data):
     """
     Combine the specified clusters into one data array.
