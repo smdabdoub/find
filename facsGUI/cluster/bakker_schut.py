@@ -171,6 +171,103 @@ def updateDistMatrix(clusters, matrix, remIDs, newID):
 
 
 
+#----------------------------------
+# BAKKER SCHUT K-MEANS DIALOG CLASS
+#----------------------------------
+from dialogs import ClusterOptionsDialog
+
+class BakkerSchutKMeansDialog(ClusterOptionsDialog):
+    """
+    Provide an options dialog for the Bakker Schut k-means clustering algorithm 
+    """
+    
+    
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Bakker Schut k-means Options', size=(350, 300))
+        self.CenterOnParent()
+        
+        # create form controls
+        self.txtNumClusters   = wx.TextCtrl(self, wx.ID_ANY, '3', size=(50,20))
+        self.txtNumPasses     = wx.TextCtrl(self, wx.ID_ANY, '5', size=(50,20))
+        
+        # create a table of label-input controls
+        self.formSizer = wx.GridSizer(2, 2, vgap=20) #rows,cols,vgap,hgap
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of clusters:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(self.txtNumClusters, 1)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of Passes:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(self.txtNumPasses, 1)
+        
+        # create the button row
+        self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL)
+        self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, self.cmdOK_Click)
+        
+        # main sizer
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.formSizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 20)
+        self.sizer.Add(self.getApplySizer(self), 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 20)
+        self.sizer.Add(self.buttonSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        self.SetSizer(self.sizer)
+        
+        
+    def cmdOK_Click(self,event):
+        #TODO: add bounds checking
+        event.Skip()
+            
+    
+    def getMethodArgs(self):
+        """
+        Gather all options specified in the dialog.
+        
+        @rtype: dict
+        @return: A dictionary of algorithm options.
+        """
+        options = {}
+        options['numClusters'] = self._getNumClusters()
+        options['numPasses'] = self._getNumPasses()
+        return options
+    
+    def getStrMethodArgs(self):
+        """
+        Define an equivalency between the variable form of algorithm options 
+        and the full string representation of the options.
+        
+        @rtype: tuple
+        @return: A tuple containing:
+            - A dictionary equating the short form of method option names
+            with the full string descriptions.
+            - A dictionary containing translations for any argument values
+            that are not easily understandable
+        """
+        options = {}
+        options['numClusters'] = 'Number of Clusters'
+        options['numPasses'] = 'Number of Passes'
+        values = {}
+        return (options, values)
+        
+        
+    def _getNumClusters(self):
+        """
+        Retrieve the specified cluster target for the algorithm.
+        
+        @rtype: int
+        @return: The number of clusters to find.
+        """
+        return int(self.txtNumClusters.GetValue())
+    
+    def _getNumPasses(self):
+        """
+        Retrieve the specified number of times the k-means algorithm should
+        be run.
+        
+        @rtype: int
+        @return: The number of passes the algorithm should perform.
+        """
+        return int(self.txtNumPasses.GetValue())
+
+
+
+
+
 
 def main():
     from data.io import loadDataFile
