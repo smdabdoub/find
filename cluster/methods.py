@@ -7,8 +7,8 @@ C{cluster()} method so that a consistent return can be maintained.
 @organization: The Ohio State University
 @organization: Nationwide Children's Hospital
 """
-from bakker_schut import bakker_kMeans
-from kmeans import kmeans
+import bakker_schut
+import kmeans
 
 import wx
 
@@ -19,10 +19,13 @@ ID_AUTOCLASS = wx.NewId()
 methods = {}
 methods[ID_KMEANS] = (ID_KMEANS, 'k-means', 
                       'Cluster the data using the k-means algorithm', 
-                      kmeans, False)
-#methods[ID_BAKKER_SCHUT] = (ID_BAKKER_SCHUT, 'k-means', 
-#                            'Cluster the data using the k-means algorithm', 
-#                            bakker_kMeans, False)
+                      kmeans.kmeans, False)
+methods[ID_BAKKER_SCHUT] = (ID_BAKKER_SCHUT, 'Bakker Schut k-means', 
+                            """Cluster the data using the variant of the 
+                               k-means algorithm designed for use with Flow 
+                               Cytometry data and published by Bakker Schut 
+                               et. al.""", 
+                            bakker_schut.bakker_kMeans, False)
 #methods[ID_AUTOCLASS] = (ID_AUTOCLASS, 'AutoClass', 
 #                         'Cluster the data using the AutoClass algorithm', 
 #                         None, False)
