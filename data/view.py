@@ -47,7 +47,7 @@ class PlotPanel(wx.Panel):
         self.figure.subplots_adjust(wspace=0.5, hspace=0.5)
         self.canvas = FigureCanvas(self, -1, self.figure)
         self._setColor(color)
-        self.SetBackgroundColour((100, 100, 100))
+        self.SetBackgroundColour('white')
         
         self._resizeflag = True
         self._setSize()
@@ -117,7 +117,8 @@ class FacsPlotPanel(PlotPanel):
 
         # initiate plotter
         PlotPanel.__init__( self, parent, **kwargs )
-        self._setColor((100,100,100))
+        #self._setColor((100,100,100))
+        self._setColor((255,255,255))
         self.figure.canvas.mpl_connect('button_press_event', self.OnClick)
         
         
