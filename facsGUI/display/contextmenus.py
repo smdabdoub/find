@@ -73,7 +73,8 @@ class TreePopupMenu(wx.Menu):
     def OnInfo(self, event):
         dlg = ClusterInfoDialog(self.parent.TopLevelParent)
         dlg.Show()
-        dlg.Destroy()
+#TODO: check on destroying non-modal dialogs
+#        dlg.Destroy()
         
     def OnPlot(self, event):
         self.parent.plotData(event.GetId())
