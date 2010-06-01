@@ -10,8 +10,29 @@ from data.store import DataStore
 import numpy as np
 from numpy import random
 import Pycluster as pc
+import wx
 
 import StringIO
+
+
+class ClusterOptionsDialog(wx.Dialog):
+    """
+    Provides a base options dialog to specify a consistent interface for
+    retrieving data from clustering-related dialogs
+    """
+    
+    def getMethodArgs(self): pass
+    def getStrMethodArgs(self): pass
+    
+    def getApplySizer(self, parent):
+        self.chkApplyToCurrentSuplot = wx.CheckBox(parent, wx.ID_ANY, 'Apply to current subplot')
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.chkApplyToCurrentSuplot)
+        return sizer
+    
+    def isApplyChecked(self):
+        return self.chkApplyToCurrentSuplot.GetValue()
+    
 
 
 def isolateClusters(selection, datasetName):
@@ -31,7 +52,7 @@ def isolateClusters(selection, datasetName):
         # merge selected clusters
         newData = dh.mergeData(selection, clusters)
         # assign new data set to the store
-        newFACSData = FacsData('', currFACSData.labels, newData, currFACSData.ID)
+        newFACSData = FacsData('', currFACSData.labels, newData, parent=currFACSData.ID)
         newFACSData.displayname = datasetName
         
         DataStore.add(newFACSData)
