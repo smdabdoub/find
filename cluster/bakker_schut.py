@@ -7,7 +7,8 @@ import util
 import data.handle as dh
 
 import numpy as np
-from scipy.cluster.vq import whiten, vq, kmeans, kmeans2
+from scipy.cluster.vq import kmeans2
+import wx
 
 def bakker_kMeans(data, **kwargs):
     """
@@ -29,18 +30,20 @@ def bakker_kMeans(data, **kwargs):
         corresponding index in the original data and a message string
     """
     k = 1
+    initClusters = 200
     msg = ''
     
     if 'numClusters' in kwargs.keys():
         k = int(kwargs['numClusters'])
+    if 'initClusters' in kwargs.keys():
+        initClusters = int(kwargs['numClusters'])
     
     #TODO: this transform should be moved to the transforms module (whenever I make it)
     # Log transform
-    logData = np.log10(np.clip(data, a_min=0.0001, a_max=np.max(np.maximum.reduce(data))))
+    logData = np.log10(np.clip(data, a_min=0.00001, a_max=np.max(np.maximum.reduce(data))))
     
-    # Choose large # of non-random initial centers
-    init = 200  # as suggested by the authors
-    centers = util.kinit(logData, init)
+    # Choose large # (200 as suggested by authors) of non-random initial centers
+    centers = util.kinit(logData, initClusters)
     
     # Run k-means
     _, ids = kmeans2(logData, np.array(centers), minit='matrix')
@@ -159,13 +162,13 @@ def updateDistMatrix(clusters, matrix, remIDs, newID):
             # calculate distances to the new cluster
             matrix[i][newID] = util.nonSymmetricClusterDistance(clusters[i], clusters[newID])
     
-    # Add empty distance dict for later updates
-    matrix[newID] = {}
-    
     # calculate the minpair: 
     # inner min finds the minpairs for each row, outer min finds overall minpair 
     minpair = min([(i,min(matrix[i], key=lambda z:matrix[i].get(z))) for i in matrix], 
-                  key=lambda p: matrix.get(p[0]).get(p[1]))
+                  key=lambda p: matrix.get(p[0]).get(p[1]))    
+    
+    # Add empty distance dict for later updates
+    matrix[newID] = {}
     
     return matrix, minpair
 
@@ -174,45 +177,46 @@ def updateDistMatrix(clusters, matrix, remIDs, newID):
 #----------------------------------
 # BAKKER SCHUT K-MEANS DIALOG CLASS
 #----------------------------------
-from dialogs import ClusterOptionsDialog
+from cluster.util import ClusterOptionsDialog
 
 class BakkerSchutKMeansDialog(ClusterOptionsDialog):
     """
     Provide an options dialog for the Bakker Schut k-means clustering algorithm 
     """
-    
-    
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Bakker Schut k-means Options', size=(350, 300))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Bakker Schut k-means Options', size=(300, 200))
         self.CenterOnParent()
         
         # create form controls
-        self.txtNumClusters   = wx.TextCtrl(self, wx.ID_ANY, '3', size=(50,20))
-        self.txtNumPasses     = wx.TextCtrl(self, wx.ID_ANY, '5', size=(50,20))
+        self.txtNumClusters     = wx.TextCtrl(self, wx.ID_ANY, '', size=(50,20))
+        self.txtNumInitClusters = wx.TextCtrl(self, wx.ID_ANY, '200', size=(50,20))
         
         # create a table of label-input controls
-        self.formSizer = wx.GridSizer(2, 2, vgap=20) #rows,cols,vgap,hgap
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of clusters:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
-        self.formSizer.Add(self.txtNumClusters, 1)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of Passes:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
-        self.formSizer.Add(self.txtNumPasses, 1)
+        self.formSizer = wx.FlexGridSizer(2, 2, vgap=20, hgap=10) #rows,cols,vgap,hgap
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of final clusters:'), 1, wx.ALIGN_RIGHT)
+        self.formSizer.Add(self.txtNumClusters, 1, wx.ALIGN_CENTER)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of starting clusters:'), 1, wx.ALIGN_RIGHT)
+        self.formSizer.Add(self.txtNumInitClusters, 1, wx.ALIGN_CENTER)
         
         # create the button row
-        self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL)
+        self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL | wx.HELP)
         self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, self.cmdOK_Click)
+        self.buttonSizer.HelpButton.Bind(wx.EVT_BUTTON, self.cmdHelp_Click)
         
         # main sizer
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.formSizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 20)
-        self.sizer.Add(self.getApplySizer(self), 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 20)
-        self.sizer.Add(self.buttonSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        self.sizer.Add(self.formSizer, 1, wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT | wx.RIGHT | wx.TOP, 20)
+        self.sizer.Add(self.getApplySizer(self), 0, wx.LEFT | wx.RIGHT | wx.TOP, 25)
+        self.sizer.Add(self.buttonSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 10)
         self.SetSizer(self.sizer)
         
         
     def cmdOK_Click(self,event):
         #TODO: add bounds checking
         event.Skip()
-            
+        
+    def cmdHelp_Click(self, event):
+        wx.MessageBox("bakker schut help")
     
     def getMethodArgs(self):
         """
@@ -223,7 +227,7 @@ class BakkerSchutKMeansDialog(ClusterOptionsDialog):
         """
         options = {}
         options['numClusters'] = self._getNumClusters()
-        options['numPasses'] = self._getNumPasses()
+        options['numInitClusters'] = self._getNumInitClusters()
         return options
     
     def getStrMethodArgs(self):
@@ -239,8 +243,8 @@ class BakkerSchutKMeansDialog(ClusterOptionsDialog):
             that are not easily understandable
         """
         options = {}
-        options['numClusters'] = 'Number of Clusters'
-        options['numPasses'] = 'Number of Passes'
+        options['numClusters'] = 'Number of final clusters'
+        options['numInitClusters'] = 'Number of initial clusters'
         values = {}
         return (options, values)
         
@@ -250,19 +254,19 @@ class BakkerSchutKMeansDialog(ClusterOptionsDialog):
         Retrieve the specified cluster target for the algorithm.
         
         @rtype: int
-        @return: The number of clusters to find.
+        @return: The final number of clusters the algorithm should settle on.
         """
         return int(self.txtNumClusters.GetValue())
     
-    def _getNumPasses(self):
+    def _getNumInitClusters(self):
         """
-        Retrieve the specified number of times the k-means algorithm should
-        be run.
+        Retrieve the specified number of initial clusters the k-means algorithm should
+        find.
         
         @rtype: int
-        @return: The number of passes the algorithm should perform.
+        @return: The number of initial clusters the algorithm should find.
         """
-        return int(self.txtNumPasses.GetValue())
+        return int(self.txtNumInitClusters.GetValue())
 
 
 
