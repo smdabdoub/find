@@ -62,7 +62,8 @@ class MainWindow(wx.Frame):
         self.dirname=''
         
         self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D)
-        self.splitter.SetBackgroundColour((150, 150, 150))
+        #self.splitter.SetBackgroundColour((150, 150, 150))
+        #self.splitter.SetBackgroundColour('white')
         self.rightPanel = wx.Panel(self.splitter)
         self.facsPlotPanel = dv.FacsPlotPanel(self.rightPanel)
         self.treeCtrlPanel = dv.FacsTreeCtrlPanel(self.splitter)
@@ -92,7 +93,9 @@ class MainWindow(wx.Frame):
         #self.dataSizer.Add(self.chkLinked, False, wx.EXPAND)
         self.dataSizer.Add(self.selectorSizer, False, wx.EXPAND | wx.TOP, 5)
         
-        self.rightPanel.SetBackgroundColour((100, 100, 100))
+        #self.rightPanel.SetBackgroundColour((100, 100, 100))
+        self.rightPanel.SetBackgroundColour((255, 255, 255))
+        #self.splitter.SetBackgroundColour('white')
         self.rightPanel.SetSizer(self.dataSizer)        
         self.splitter.SetMinimumPaneSize(20)
         self.splitter.SplitVertically(self.treeCtrlPanel, self.rightPanel, 150)
@@ -472,6 +475,7 @@ class MainWindow(wx.Frame):
         """
         dlg = cDlgs.getClusterDialog(event.GetId(), self)
         if dlg.ShowModal() == wx.ID_OK:
+            self.statusbar.SetStatusText('Running %s clustering...' % cMthds.methods[event.GetId()][1], 0)
             if (DataStore.getCurrentDataSet() is not None):
                 fcs = DataStore.getCurrentDataSet()
                 data = fcs.data
@@ -538,6 +542,7 @@ class MainWindow(wx.Frame):
             nameDlg = EditNameDialog(self, '')
             if (nameDlg.ShowModal() == wx.ID_OK):
                 cUtil.isolateClusters(selection, nameDlg.Text)
+            nameDlg.Destroy()
             
             self.treeCtrlPanel.updateTree()
         
