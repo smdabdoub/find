@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 """
 This module provides the functionality to 
 read and write CSV files from FACS data. 
