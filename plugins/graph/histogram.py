@@ -34,7 +34,13 @@ def histogram(subplot, figure, dims):
     h, b = numpy.histogram(subplot.Data[:, dims[0]], bins=opts['bins'])
     b = (b[:-1] + b[1:])/2.0
     subplot.axes.plot(b, h)
-
+    
+    # Kernel density estimation version
+#    gkde = stats.gaussian_kde(xn)
+#    ind = np.logspace(fcsLog(np.min(xn)), fcsLog(np.max(xn)), xn.shape[0]*.1)
+#    ind = np.logspace(scLog(np.min(xn)), scLog(np.max(xn)), xn.shape[0]*.1)
+#    kdepdf = gkde.evaluate(ind)
+#    plt.plot(ind, kdepdf, label='kde', color='red')
 
 
 # OPTIONS DIALOG
