@@ -72,7 +72,7 @@ class KMeansDialog(ClusterOptionsDialog):
     
     
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'K-Means Options', size=(350, 300))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'k-means Options', size=(350, 300))
         self.CenterOnParent()
         
         # create form controls
@@ -88,20 +88,15 @@ class KMeansDialog(ClusterOptionsDialog):
         self.formSizer = wx.GridSizer(4, 2, vgap=20) #rows,cols,vgap,hgap
         self.formSizer.Add(wx.StaticText(self, -1, 'Number of clusters:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtNumClusters, 1)
-        self.formSizer.Add(wx.StaticText(self, -1, 'K-Means method:', (20, 5)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Center calculation:', (20, 5)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.cbxMethod, 1, wx.EXPAND)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of Passes:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of passes:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtNumPasses, 1)
         
         # create the button row
-        self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL)
+        self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL | wx.HELP)
         self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, self.cmdOK_Click)
-        #self.buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
-        #self.cmdOK = wx.Button(self, wx.ID_OK)
-        #self.cmdCancel = wx.Button(self, wx.ID_CANCEL)
-        #self.cmdOK.Bind(wx.EVT_BUTTON, self.cmdOK_Click)
-        #self.buttonSizer.Add(self.cmdOK, 0, wx.EXPAND)
-        #self.buttonSizer.Add(self.cmdCancel, 0, wx.EXPAND)
+        self.buttonSizer.HelpButton.Bind(wx.EVT_BUTTON, self.cmdHelp_Click)
         
         # main sizer
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -120,6 +115,14 @@ class KMeansDialog(ClusterOptionsDialog):
                 self.initialCenters = dlg.GetCenters()
             dlg.Destroy()
         event.Skip()
+    
+    
+    def cmdHelp_Click(self, event):
+        from display.help import HelpDialog
+        dlg = HelpDialog(self, "k-means help", htmlfile="help/k-means_clustering.html")
+        
+        dlg.Show()
+    
             
     def chkInitialCenters_Click(self, event):
         if (event.Selection):
