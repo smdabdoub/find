@@ -216,7 +216,10 @@ class BakkerSchutKMeansDialog(ClusterOptionsDialog):
         event.Skip()
         
     def cmdHelp_Click(self, event):
-        wx.MessageBox("bakker schut help")
+        from display.help import HelpDialog
+        dlg = HelpDialog(self, "Bakker Schut kmeans help", htmlfile="help/bakker_schut_kmeans_clustering.html")
+        
+        dlg.Show()
     
     def getMethodArgs(self):
         """
