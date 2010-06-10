@@ -58,7 +58,9 @@ class ClusterOptionsDialog(wx.Dialog):
         pass
     
     def cmdOK_click(self, event):
-        # validate user input and display any error messages
+        """
+        Call the form validation method and display any error messages.
+        """
         msg = self.validate()
         if len(msg) > 0:
             dlg = wx.MessageDialog(None, '\n'.join(msg), 
