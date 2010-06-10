@@ -178,6 +178,8 @@ def updateDistMatrix(clusters, matrix, remIDs, newID):
 # BAKKER SCHUT K-MEANS DIALOG CLASS
 #----------------------------------
 from cluster.util import ClusterOptionsDialog
+from cluster.util import MAX_CLUSTERS
+import display.formatters as f
 
 class BakkerSchutKMeansDialog(ClusterOptionsDialog):
     """
@@ -200,7 +202,7 @@ class BakkerSchutKMeansDialog(ClusterOptionsDialog):
         
         # create the button row
         self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL | wx.HELP)
-        self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, self.cmdOK_Click)
+        self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, super(BakkerSchutKMeansDialog, self).cmdOK_click)
         self.buttonSizer.HelpButton.Bind(wx.EVT_BUTTON, self.cmdHelp_Click)
         
         # main sizer
@@ -211,15 +213,32 @@ class BakkerSchutKMeansDialog(ClusterOptionsDialog):
         self.SetSizer(self.sizer)
         
         
-    def cmdOK_Click(self,event):
-        #TODO: add bounds checking
-        event.Skip()
-        
     def cmdHelp_Click(self, event):
         from display.help import HelpDialog
-        dlg = HelpDialog(self, "Bakker Schut kmeans help", htmlfile="help/bakker_schut_kmeans_clustering.html")
+        HelpDialog(self, "Bakker Schut kmeans help", htmlfile="help/bakker_schut_kmeans_clustering.html").Show()
         
-        dlg.Show()
+    
+    def validate(self):
+        intVal = f.IntFormatter()
+        msg = []
+        
+        if not intVal.validate(self.txtNumClusters.Value):
+            msg.append("Number of final clusters: A valid number must be entered.")
+        else:
+            val = int(self.txtNumClusters.Value)
+            if val < 1 or val > MAX_CLUSTERS:
+                msg.append("Number of clusters: A value between 1 and %d must be entered." % MAX_CLUSTERS)
+        
+        if not intVal.validate(self.txtNumInitClusters.Value):
+            msg.append("Number of starting clusters: A valid number must be entered.")
+        else:
+            val = int(self.txtNumInitClusters.Value)
+            if val < 10:
+                msg.append("Number of starting clusters: A value greater than 10 must be entered")
+        
+        return msg
+                
+
     
     def getMethodArgs(self):
         """
