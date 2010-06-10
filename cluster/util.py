@@ -15,14 +15,59 @@ import wx
 import StringIO
 
 
+MAX_CLUSTERS = 15
+
+
+
 class ClusterOptionsDialog(wx.Dialog):
     """
     Provides a base options dialog to specify a consistent interface for
     retrieving data from clustering-related dialogs
     """
     
-    def getMethodArgs(self): pass
-    def getStrMethodArgs(self): pass
+    def getMethodArgs(self): 
+        """
+        Gather all options specified in the dialog.
+        
+        @rtype: dict
+        @return: A dictionary of algorithm options.
+        """
+        pass
+    
+    def getStrMethodArgs(self): 
+        """
+        Define an equivalency between the variable form of algorithm options 
+        and the full string representation of the options.
+        
+        @rtype: tuple
+        @return: A tuple containing:
+            - A dictionary equating the short form of method option names
+            with the full string descriptions.
+            - A dictionary containing translations for any argument values
+            that are not easily understandable
+        """
+        pass
+    
+    def validate(self): 
+        """
+        Validates user input to the dialog.
+        
+        :@rtype: list
+        :@return: A list of strings, one for each validation error. Empty if no errors. 
+        """
+        pass
+    
+    def cmdOK_click(self, event):
+        # validate user input and display any error messages
+        msg = self.validate()
+        if len(msg) > 0:
+            dlg = wx.MessageDialog(None, '\n'.join(msg), 
+                                   'Invalid input', wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+        
+        event.Skip()
     
     def getApplySizer(self, parent):
         self.chkApplyToCurrentSuplot = wx.CheckBox(parent, wx.ID_ANY, 'Apply to current subplot')
