@@ -63,6 +63,8 @@ def kmeans(data, **kwargs):
 # K-MEANS DIALOG CLASS
 #----------------------------------
 from cluster.util import ClusterOptionsDialog
+from cluster.util import MAX_CLUSTERS
+import display.formatters as f
 import wx
 
 class KMeansDialog(ClusterOptionsDialog):
@@ -76,7 +78,7 @@ class KMeansDialog(ClusterOptionsDialog):
         self.CenterOnParent()
         
         # create form controls
-        self.txtNumClusters   = wx.TextCtrl(self, wx.ID_ANY, '3', size=(50,20))
+        self.txtNumClusters   = wx.TextCtrl(self, wx.ID_ANY, '', size=(50,20))
         self.cbxMethod        = wx.ComboBox(self, wx.ID_ANY, 'Mean', (-1,-1), (160, -1), ['Mean','Median'], wx.CB_READONLY)
         self.txtNumPasses     = wx.TextCtrl(self, wx.ID_ANY, '5', size=(50,20))
         self.chkInitialCenters = wx.CheckBox(self, wx.ID_ANY, 'Manually select centers?')
@@ -114,14 +116,13 @@ class KMeansDialog(ClusterOptionsDialog):
             if dlg.ShowModal() == wx.ID_OK:
                 self.initialCenters = dlg.GetCenters()
             dlg.Destroy()
-        event.Skip()
+        else:
+            super(KMeansDialog, self).cmdOK_click(event)
     
     
     def cmdHelp_Click(self, event):
         from display.help import HelpDialog
-        dlg = HelpDialog(self, "k-means help", htmlfile="help/k-means_clustering.html")
-        
-        dlg.Show()
+        HelpDialog(self, "k-means help", htmlfile="help/k-means_clustering.html").Show()
     
             
     def chkInitialCenters_Click(self, event):
@@ -130,6 +131,27 @@ class KMeansDialog(ClusterOptionsDialog):
             self.txtNumPasses.Value = '0'
         else:
             self.txtNumPasses.Enable(True)
+    
+    
+    def validate(self):
+        intVal = f.IntFormatter()
+        msg = []
+        
+        if not intVal.validate(self.txtNumClusters.Value):
+            msg.append("Number of clusters: A valid number must be entered.")
+        else:
+            val = int(self.txtNumClusters.Value)
+            if val < 1 or val > MAX_CLUSTERS:
+                msg.append("Number of clusters: A value between 1 and %d must be entered." % MAX_CLUSTERS)
+        
+        if not intVal.validate(self.txtNumPasses.Value):
+            msg.append("Number of passes: A valid number must be entered.")
+        else:
+            val = int(self.txtNumPasses.Value)
+            if val < 1 or val > MAX_CLUSTERS:
+                msg.append("Number of passes: A value greater than 1 must be entered")
+                    
+        return msg
     
     
     def getMethodArgs(self):
