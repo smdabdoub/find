@@ -474,8 +474,8 @@ class MainWindow(wx.Frame):
         """
         dlg = cDlgs.getClusterDialog(event.GetId(), self)
         if dlg.ShowModal() == wx.ID_OK:
-            self.statusbar.SetStatusText('Running %s clustering...' % cMthds.methods[event.GetId()][1], 0)
             if (DataStore.getCurrentDataSet() is not None):
+                self.statusbar.SetStatusText('Running %s clustering...' % cMthds.methods[event.GetId()][1], 0)
                 fcs = DataStore.getCurrentDataSet()
                 data = fcs.data
                 # Remove columns from analysis as specified by the user
