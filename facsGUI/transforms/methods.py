@@ -4,6 +4,8 @@ for data transformations.
 
 @author: Shareef Dabdoub
 '''
+from matplotlib import scale as mscale
+
 methods = {}
 
 def addPluginMethod(descriptor):
@@ -16,13 +18,19 @@ def addPluginMethod(descriptor):
         - ID (int)
         - name (string)
         - description (string)
-        - method
-        - applicable data types (as defined in data.store)
+        - transform class
+        - scale class (if applicable)
         - plugin flag
     """
     global methods
     methods[descriptor[0]] = descriptor
     
+    # custom scales are available, see:
+    # http://matplotlib.sourceforge.net/examples/api/custom_scale_example.html
+    if descriptor[-2] is not None:
+        mscale.register_scale(descriptor[-2])
+    
+
 def AvailableMethods():
     """
     Retrieve the list of available plotting algorithms in this module.
@@ -37,10 +45,9 @@ def getMethod(id):
     Retrieve a plotting method by its ID.
     
     :@type id: int or str
-    :@param id: The identifier for a plotting method. An int id is required
+    :@param id: The identifier for a transformation method. An int id is required
                 for the wx event subsystem, but a string id is required as a 
-                unique id for plugin authors to specify dependencies on 
-                plotting methods.
+                unique id for plugin authors to specify dependencies.
     :@rtype: method
     :@return: The method associated with the ID, or None.
     """
