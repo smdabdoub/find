@@ -3,13 +3,10 @@ Created on Jul 30, 2009
 
 @author: shareef
 '''
-
-import imp
-import os
 import os.path
 import sys
 
-pluginTypes = ['cluster', 'analysis', 'stats', 'graph', 'IO']
+pluginTypes = ['cluster', 'analysis', 'transforms', 'graph', 'IO']
 loaded = dict([(type_, []) for type_ in pluginTypes])
 
 def discoverPlugins():
