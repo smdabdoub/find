@@ -6,7 +6,8 @@ Created on Feb 11, 2010
 __all__ = ['histogram_register']
 
 # PLOTTING METHOD
-import numpy
+import numpy as np
+from scipy import stats
 
 def histogram(subplot, figure, dims):
     """
@@ -31,16 +32,24 @@ def histogram(subplot, figure, dims):
     subplot.axes.set_xscale(opts['yTransform'])
     
     #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
-    h, b = numpy.histogram(subplot.Data[:, dims[0]], bins=opts['bins'])
-    b = (b[:-1] + b[1:])/2.0
-    subplot.axes.plot(b, h)
+#    h, b = np.histogram(subplot.Data[:, dims[0]], bins=opts['bins'])
+#    b = (b[:-1] + b[1:])/2.0
+#    subplot.axes.plot(b, h)
+    
     
     # Kernel density estimation version
-#    gkde = stats.gaussian_kde(xn)
-#    ind = np.logspace(fcsLog(np.min(xn)), fcsLog(np.max(xn)), xn.shape[0]*.1)
-#    ind = np.logspace(scLog(np.min(xn)), scLog(np.max(xn)), xn.shape[0]*.1)
-#    kdepdf = gkde.evaluate(ind)
-#    plt.plot(ind, kdepdf, label='kde', color='red')
+    data = subplot.Data[:, dims[0]]
+    if opts['xTransform'] == 'linear':
+        func = np.linspace
+    
+    if opts['xTransform'] == 'log':
+#       data = log_transform...
+        pass
+    
+    ind = func(np.min(data), np.max(data), data.shape[0]*.1)
+    gkde = stats.gaussian_kde(data)
+    kdepdf = gkde.evaluate(ind)
+    subplot.axes.plot(ind, kdepdf, label='kde', color='red')
 
 
 # OPTIONS DIALOG
