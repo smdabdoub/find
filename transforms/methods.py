@@ -18,7 +18,7 @@ def addPluginMethod(descriptor):
         - ID (int)
         - name (string)
         - description (string)
-        - transform class
+        - transform method
         - scale class (if applicable)
         - plugin flag
     """
