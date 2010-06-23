@@ -4,13 +4,17 @@ for data transformations.
 
 @author: Shareef Dabdoub
 '''
+from transforms.log import log
 from matplotlib import scale as mscale
+import wx
 
 methods = {}
+methods['log'] = ('log', wx.NewId(), 'Logarithmic Transform', 
+                  'Transforms data to a logarithmic scale', log, None, False)
 
 def addPluginMethod(descriptor):
     """
-    Adds a plotting method to the list of available methods.
+    Adds a transform method to the list of available methods.
     
     :@type descriptor: tuple
     :@param descriptor: Each tuple contains the following information in order:
@@ -20,10 +24,11 @@ def addPluginMethod(descriptor):
         - description (string)
         - transform method
         - scale class (if applicable)
-        - plugin flag
     """
     global methods
-    methods[descriptor[0]] = descriptor
+    descriptor = list(descriptor)
+    descriptor.append(True)
+    methods[descriptor[0]] = tuple(descriptor)
     
     # custom scales are available, see:
     # http://matplotlib.sourceforge.net/examples/api/custom_scale_example.html
