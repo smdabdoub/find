@@ -9,12 +9,15 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 
-def log(data, base=10, min_clip=0.00001):
+def log(data, **kwargs):
     """
-    Transforms the given data to a log-scale.
+    Transforms the given data to a logarithmic scale.
     
     :@type data: ndarray
     :@param param: The data to be transformed
+    
+    kwargs
+    ------
     :@type base: int or str
     :@param base: The logarithmic base to use when transforming the data. 
                   Acceptable values: 2, 10, and e. Any other value will 
@@ -24,6 +27,17 @@ def log(data, base=10, min_clip=0.00001):
                       will be clipped to this value.
     
     """
+    base = 10
+    min_clip = 0.00001
+    
+    if 'base' in kwargs:
+        try:
+            base = int(kwargs['base'])
+        except ValueError:
+            base = kwargs['base']
+    if 'min_clip' in kwargs:
+        min_clip = float(kwargs['min_clip'])
+    
     func = np.log10
     
     if base == 2:
