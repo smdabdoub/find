@@ -229,7 +229,6 @@ class TransformOptionsPanel(OptionsDialogPanel):
         # Init controls
         transformLabel = StyledStaticText(self, wx.ID_ANY, "**Transforms**")
         
-        #TODO: Retrieve these from the future Transforms module
         self.transforms = ['linear','log'] 
         self.cbxX_Transform = wx.ComboBox(self, choices=self.transforms, 
                                           style=wx.CB_READONLY)
@@ -237,6 +236,7 @@ class TransformOptionsPanel(OptionsDialogPanel):
                                           style=wx.CB_READONLY)
         self.chkTransformAuto = wx.CheckBox(self, label="Auto")
         self.chkTransformAuto.Bind(wx.EVT_CHECKBOX, self.chkTransformAuto_Click)
+        self.enabledTransforms = [True, True]
         
 
         # Layout
@@ -254,8 +254,18 @@ class TransformOptionsPanel(OptionsDialogPanel):
 
 
     def chkTransformAuto_Click(self, event):
-        self.cbxX_Transform.Enable(not event.Selection)
-        self.cbxY_Transform.Enable(not event.Selection)
+        if self.enabledTransforms[0]:
+            self.cbxX_Transform.Enable(not event.Selection)
+        if self.enabledTransforms[1]:
+            self.cbxY_Transform.Enable(not event.Selection)
+
+    def enableXTransform(self, enable):
+        self.cbxX_Transform.Enable(enable)
+        self.enabledTransforms[0] = enable        
+
+    def enableYTransform(self, enable):
+        self.cbxY_Transform.Enable(enable)
+        self.enabledTransforms[1] = enable
 
 
     def loadOptions(self, opts):
