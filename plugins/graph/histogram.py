@@ -5,7 +5,8 @@ Created on Feb 11, 2010
 '''
 __all__ = ['histogram_register']
 
-# PLOTTING METHOD
+import transforms.methods as tm
+
 import numpy as np
 from scipy import stats
 
@@ -24,12 +25,13 @@ def histogram(subplot, figure, dims):
     # Set axes transforms
     if (opts['transformAuto']):
         opts['xTransform'] = 'log'
-        opts['yTransform'] = 'log'
+        opts['yTransform'] = 'linear'
     
     subplot.axes = figure.add_subplot(subplot.mnp, title=subplot.Title)
     subplot.axes.set_xlabel(subplot.Labels[dims[0]])
-    subplot.axes.set_yscale(opts['xTransform'])
-    subplot.axes.set_xscale(opts['yTransform'])
+    subplot.axes.set_xscale('linear')
+#    subplot.axes.set_xscale(opts['xTransform'])
+#    subplot.axes.set_yscale(opts['yTransform'])
     
     #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
 #    h, b = np.histogram(subplot.Data[:, dims[0]], bins=opts['bins'])
@@ -43,8 +45,8 @@ def histogram(subplot, figure, dims):
         func = np.linspace
     
     if opts['xTransform'] == 'log':
-#       data = log_transform...
-        pass
+        data = tm.getMethod('log')(data) 
+        func = np.logspace
     
     ind = func(np.min(data), np.max(data), data.shape[0]*.1)
     gkde = stats.gaussian_kde(data)
