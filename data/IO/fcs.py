@@ -1,4 +1,9 @@
-"""Provide access to data stored in FCS files"""
+"""
+Provide access to data stored in FCS files
+
+Input method taken from the py-fcm project at:
+http://code.google.com/p/py-fcm/ 
+"""
 from error import UnimplementedFcsDataMode
 
 
