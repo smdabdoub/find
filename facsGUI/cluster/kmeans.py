@@ -35,15 +35,15 @@ def kmeans(data, **kwargs):
     smartCenters = False
     msg = ''
     
-    if 'numClusters' in kwargs.keys():
+    if 'numClusters' in kwargs:
         k = int(kwargs['numClusters'])
-    if 'npasses' in kwargs.keys():
+    if 'npasses' in kwargs:
         npasses = int(kwargs['npasses'])
-    if 'method' in kwargs.keys():
+    if 'method' in kwargs:
         method = kwargs['method']
-    if 'initialCenters' in kwargs.keys():
+    if 'initialCenters' in kwargs:
         initialCenters = kwargs['initialCenters']
-    if 'smartCenters' in kwargs.keys():
+    if 'smartCenters' in kwargs:
         smartCenters = kwargs['smartCenters']
     
     
