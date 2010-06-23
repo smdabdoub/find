@@ -21,6 +21,7 @@ def histogram(subplot, figure, dims):
         opts['transformAuto'] = True
         opts['xTransform'] = ''
         opts['yTransform'] = ''
+        opts['kdeDisplay'] = True 
     
     # Set axes transforms
     if (opts['transformAuto']):
@@ -29,29 +30,26 @@ def histogram(subplot, figure, dims):
     
     subplot.axes = figure.add_subplot(subplot.mnp, title=subplot.Title)
     subplot.axes.set_xlabel(subplot.Labels[dims[0]])
-    subplot.axes.set_xscale('linear')
-#    subplot.axes.set_xscale(opts['xTransform'])
-#    subplot.axes.set_yscale(opts['yTransform'])
+    subplot.axes.set_xscale(opts['xTransform'])
     
-    #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
-#    h, b = np.histogram(subplot.Data[:, dims[0]], bins=opts['bins'])
-#    b = (b[:-1] + b[1:])/2.0
-#    subplot.axes.plot(b, h)
-    
-    
-    # Kernel density estimation version
     data = subplot.Data[:, dims[0]]
-    if opts['xTransform'] == 'linear':
-        func = np.linspace
     
     if opts['xTransform'] == 'log':
         data = tm.getMethod('log')(data) 
-        func = np.logspace
+
+    # Binned Histogram
+    if not opts['kdeDisplay']:
+        #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
+        h, b = np.histogram(data, bins=opts['bins'])
+        b = (b[:-1] + b[1:])/2.0
+        subplot.axes.plot(b, h)
     
-    ind = func(np.min(data), np.max(data), data.shape[0]*.1)
-    gkde = stats.gaussian_kde(data)
-    kdepdf = gkde.evaluate(ind)
-    subplot.axes.plot(ind, kdepdf, label='kde', color='red')
+    # Kernel density estimation version
+    else:
+        ind = np.linspace(np.min(data), np.max(data), data.shape[0]*.1)
+        gkde = stats.gaussian_kde(data)
+        kdepdf = gkde.evaluate(ind)
+        subplot.axes.plot(ind, kdepdf, label='kde', color='red')
 
 
 # OPTIONS DIALOG
@@ -72,7 +70,9 @@ class HistogramOptionsDialog(OptionsDialog):
                                                          title="Histogram Options", 
                                                          size=(400,180))
 
-        self.NB.AddPage(TransformOptionsPanel(self.NB), "Transformations")
+        top = TransformOptionsPanel(self.NB)
+        top.enableYTransform(False)
+        self.NB.AddPage(top, "Transformations")
         self.NB.AddPage(HistogramOptionsPanel(self.NB), "Histogram Options")
 
         self.loadOptions(subplot.opts)
