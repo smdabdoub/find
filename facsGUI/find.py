@@ -251,11 +251,11 @@ class MainWindow(wx.Frame):
                         submenus[type_].Append(cID, name, descr)
                         self.Bind(wx.EVT_MENU, self.onCluster, id=cID)
                 # Analysis plugins
-                if type_ == plugin.pluginTypes[1]:
+                elif type_ == plugin.pluginTypes[1]:
                     continue
                 
                 # Transforms plugins
-                if type_ == plugin.pluginTypes[2]:
+                elif type_ == plugin.pluginTypes[2]:
                     continue
                 
                 # Plotting plugins
