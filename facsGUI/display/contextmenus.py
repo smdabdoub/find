@@ -13,6 +13,7 @@ class TreePopupMenu(wx.Menu):
         wx.Menu.__init__(self)
 
         self.parent = parent
+        self.dataItem = True
         
         # Retrieve the appropriate plotting methods from the plot.methods module
         dataPlots = ifilter(lambda item: data.store.ID_DATA_ITEM in item[-2], 
@@ -26,6 +27,11 @@ class TreePopupMenu(wx.Menu):
 
         # Menu items specific to a data item
         if ('dataItem' in kwargs and kwargs['dataItem']):
+            # Data info
+            self.info = wx.MenuItem(self, wx.NewId(), 'Info')
+            self.AppendItem(self.info)
+            self.Bind(wx.EVT_MENU, self.OnInfo, id=self.info.GetId())
+            
             # Rename data item
             self.rename = wx.MenuItem(self, wx.NewId(), 'Rename', 'Give a new display name to this data item')
             self.AppendItem(self.rename)
@@ -36,6 +42,7 @@ class TreePopupMenu(wx.Menu):
             
         # Menu items specific to a clustering
         if ('dataItem' in kwargs and not kwargs['dataItem']):
+            self.dataItem = False
             self.assignPlotMethods(clusterPlots, self.plotSubmenu)
             
             # Cluster info
@@ -71,10 +78,11 @@ class TreePopupMenu(wx.Menu):
         self.parent.deleteSelection()
         
     def OnInfo(self, event):
-        dlg = ClusterInfoDialog(self.parent.TopLevelParent)
-        dlg.Show()
-#TODO: check on destroying non-modal dialogs
-#        dlg.Destroy()
+        if self.dataItem:
+            self.parent.displayDataInfo()
+        else:
+            dlg = ClusterInfoDialog(self.parent.TopLevelParent)
+            dlg.Show()
         
     def OnPlot(self, event):
         self.parent.plotData(event.GetId())
