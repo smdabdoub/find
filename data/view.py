@@ -556,6 +556,7 @@ class Subplot(object):
 
 
 from cluster.util import clusteringInfo
+from display.dialogs import DataInfoDialog
 class FacsTreeCtrlPanel(wx.Panel):
     def __init__(self, parent):
         # Use the WANTS_CHARS style so the panel doesn't eat the Return key.
@@ -688,6 +689,13 @@ class FacsTreeCtrlPanel(wx.Panel):
         """
         self.applyToSelection(DataStore.selectDataSet, FacsData.selectClustering)
         
+    
+    def displayDataInfo(self):
+        dataID, _ = self.getSanitizedItemSelectionData()
+        data = DataStore.get(dataID)
+        dlg = DataInfoDialog(self.Parent, data)
+        dlg.Show()
+    
     def plotData(self, plotType):
         dataID, clusterID = self.getSanitizedItemSelectionData()
         self.Parent.TopLevelParent.facsPlotPanel.plotData(dataID, clusterID, plotType)
