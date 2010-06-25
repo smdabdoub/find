@@ -383,7 +383,7 @@ class MainWindow(wx.Frame):
                         data = dh.reorderColumns(data, allColArr)
                     
                 # update the DataStore
-                DataStore.add(FacsData(dlg.Filenames[n], labels, data))
+                DataStore.add(FacsData(dlg.Filenames[n], labels, data, annotations=annotations))
                 self.updateAxesList(labels)
                     
                 if (not allDims):
