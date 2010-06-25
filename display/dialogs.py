@@ -106,9 +106,9 @@ class DimensionExclusionDialog(wx.Dialog):
         self.checkBoxes = []
         
         for dim in dimensions:
-           self.checkBoxes.append(wx.CheckBox(self, wx.ID_ANY, dim))
-           self.checkBoxes[-1].SetValue(True)
-           self.formSizer.Add(self.checkBoxes[-1], 1, wx.EXPAND)
+            self.checkBoxes.append(wx.CheckBox(self, wx.ID_ANY, dim))
+            self.checkBoxes[-1].SetValue(True)
+            self.formSizer.Add(self.checkBoxes[-1], 1, wx.EXPAND)
         
         self.sizer.AddSpacer(15)
         #self.sizer.Add(wx.StaticText(self, -1, 'Exclude dimensions'), 0, wx.ALIGN_CENTER_HORIZONTAL)
@@ -171,6 +171,27 @@ class FigureSetupDialog(wx.Dialog):
         return int(self.txtColumns.GetValue())
         
         
+class DataInfoDialog(wx.Dialog):
+    """
+    This class displays (for now) the header information embedded in 
+    FCS 3.0 files.
+    """
+    def __init__(self, parent, data):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Data Information', style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
+        self.CenterOnParent()
+        
+        textAnn = data.annotations['text']
+        
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.dataGrid = DataGrid(self, textAnn.items(), ['Parameter', 'Value'])
+        
+        self.sizer.Add(self.dataGrid, 1, wx.EXPAND)
+        self.sizer.AddSpacer(5)
+        self.sizer.Add(self.CreateButtonSizer(wx.OK), 0, wx.EXPAND)
+        self.sizer.AddSpacer(5)
+        
+        self.SetSizer(self.sizer)
+
         
         
         
