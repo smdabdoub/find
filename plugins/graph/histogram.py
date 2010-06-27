@@ -17,6 +17,7 @@ def histogram(subplot, figure, dims):
     # set default plot options if necessary
     opts = subplot.opts
     if len(opts) == 0:
+        opts['type'] = 'Gaussian KDE'
         opts['bins'] = 200
         opts['transformAuto'] = True
         opts['xTransform'] = ''
@@ -30,26 +31,33 @@ def histogram(subplot, figure, dims):
     
     subplot.axes = figure.add_subplot(subplot.mnp, title=subplot.Title)
     subplot.axes.set_xlabel(subplot.Labels[dims[0]])
-    subplot.axes.set_xscale(opts['xTransform'])
     
     data = subplot.Data[:, dims[0]]
     
     if opts['xTransform'] == 'log':
         data = tm.getMethod('log')(data) 
 
-    # Binned Histogram
-    if not opts['kdeDisplay']:
-        #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
-        h, b = np.histogram(data, bins=opts['bins'])
-        b = (b[:-1] + b[1:])/2.0
-        subplot.axes.plot(b, h)
-    
-    # Kernel density estimation version
-    else:
+    # Kernel density estimation
+    if opts['type'] == 'Gaussian KDE' or opts['type'] == 'Both':
         ind = np.linspace(np.min(data), np.max(data), data.shape[0]*.1)
         gkde = stats.gaussian_kde(data)
         kdepdf = gkde.evaluate(ind)
         subplot.axes.plot(ind, kdepdf, label='kde', color='red')
+    
+    # Binned Histogram
+    if opts['type'] != 'Gaussian KDE':
+        #subplot.axes.hist(subplot.Data[:, dims[0]], bins=250, normed=True, histtype='bar',log=True)
+        h, b = np.histogram(data, bins=opts['bins'])
+        if opts['type'] == 'Both':
+            h = tm.getMethod('log')(h)
+        b = (b[:-1] + b[1:])/2.0
+        subplot.axes.plot(b, h)
+        
+    if opts['type'] == 'Both':
+        dataMax = max(np.max(kdepdf), np.max(h))
+        subplot.axes.set_ylim(0, dataMax + 0.1)
+        
+        
 
 
 # OPTIONS DIALOG
@@ -90,10 +98,16 @@ class HistogramOptionsPanel(OptionsDialogPanel):
         wx.Panel.__init__(self, parent)
 
         # Init controls
+        self.cbxType = wx.ComboBox(self, choices=['Gaussian KDE', 'Binned', 'Both'],
+                                   style=wx.CB_READONLY)
+        self.cbxType.Bind(wx.EVT_COMBOBOX, self.cbxType_Select)
         self.txtBins = wx.TextCtrl(self, size=(80,20))
+        self.txtBins.Enable(False)
 
         # Layout
-        mainSizer = wx.BoxSizer()
+        mainSizer = wx.FlexGridSizer(2, 2, 5, 5)
+        mainSizer.Add(wx.StaticText(self, wx.ID_ANY, 'Histogram Type:'))
+        mainSizer.Add(self.cbxType, 1, wx.EXPAND)
         mainSizer.Add(wx.StaticText(self, wx.ID_ANY, "Histogram Bins:"))
         mainSizer.Add(self.txtBins, 1, wx.EXPAND, 10)
         
@@ -101,6 +115,16 @@ class HistogramOptionsPanel(OptionsDialogPanel):
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
         self.Sizer.Add(mainSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
+
+    def cbxType_Select(self, event):
+        """
+        Enable/disable the Bins text box depending on which histogram 
+        type is selected.
+        """
+        if self.cbxType.StringSelection in ('Binned', 'Both'):
+            self.txtBins.Enable(True)
+        else:
+            self.txtBins.Enable(False)
 
 
     def loadOptions(self, opts):
@@ -110,6 +134,7 @@ class HistogramOptionsPanel(OptionsDialogPanel):
         :@type opts: dict  
         :@param opts: A dict of plot settings.
         """
+        self.cbxType.StringSelection = opts['type']
         self.txtBins.Value = str(opts['bins'])
             
     
@@ -130,6 +155,7 @@ class HistogramOptionsPanel(OptionsDialogPanel):
     @property
     def Options(self):
         options = {}
+        options['type'] = self.cbxType.StringSelection
         options['bins'] = int(self.txtBins.Value)
         return options
     
