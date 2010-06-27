@@ -7,7 +7,7 @@ http://code.google.com/p/py-fcm/
 from error import UnimplementedFcsDataMode
 
 
-from operator import and_
+from operator import and_, itemgetter
 from math import log
 from struct import calcsize, unpack
 import re
@@ -88,8 +88,15 @@ class FCSreader(object):
         path, name = os.path.split(self.filename)
         name, ext = os.path.splitext(name)
         
+        tmp = {}
         for t in text:
-            print "%s: %s" % (t, str(text[t]))
+            if 'display' in t:
+                tmp[t] = str(text[t])
+        
+        defXform = []
+        for item in sorted(tmp.iteritems(), key=itemgetter(0)):
+            defXform.append(item[1])
+        
         
 #        return (name, data, channels, scchannels, text, header, analysis)
 #        name, data, channels, scchannels,
@@ -98,7 +105,8 @@ class FCSreader(object):
 #                        'analysis': analysis,
 #                        }))
        
-        return (channels, data, {'text': text,'header': header,'analysis': analysis})
+        return (channels, data, {'text': text, 'header': header,
+                                 'analysis': analysis, 'defXform': defXform})
 
 
 
