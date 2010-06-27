@@ -206,6 +206,25 @@ class FacsData(object):
         
         self.selectedClustering = None
         
+    
+    def getDefaultTransform(self, dim=0):
+        """
+        Retrieves (if available) the amplification method (linear or log) 
+        used in capturing the flow data.
+        
+        :@type dim: int
+        :@param dim: The index of the desired dimension
+        :@rtype: str
+        :@return: The amplification method used for capture. None otherwise.
+        """
+        if 'defXform' in self.annotations:
+            if type(self.annotations['defXform']) is list:
+                if dim < len(self.annotations['defXform']):
+                    return self.annotations['defXform'][dim]
+            else:
+                return self.annotations['defXform']
+    
+        
     def addClustering(self, methodID, clusterIDs, clusteringOpts, cID=None):
         """
         Adds an alternate clustering of the data.
