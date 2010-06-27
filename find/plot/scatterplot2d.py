@@ -25,13 +25,15 @@ def scatterplot2D(subplot, figure, dims):
     
     # Set axes transforms
     if (opts['transformAuto']):
+        fcData = DataStore.get(subplot.dataIndex)
         tf = ('xTransform', 'yTransform')
-        for i in range(2):
-            lc = DataStore.get(subplot.dataIndex).labels[dims[i]].lower()
-            if ('fsc' in lc or 'ssc' in lc):
-                opts[tf[i]] = 'linear'
-            else:
+        for i, dim in enumerate(dims):
+            t = fcData.getDefaultTransform(dim)
+            if (t is not None) and ('log' in t.lower()):
                 opts[tf[i]] = 'log'
+            else:
+                opts[tf[i]] = 'linear'
+            
     
     if opts['xRangeAuto']:
         opts['xRange'] = (1, np.max(subplot.Data[:,dims[0]])*1.5)
