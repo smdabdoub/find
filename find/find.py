@@ -131,9 +131,9 @@ class MainWindow(wx.Frame):
         fileMenu.AppendSubMenu(exportMenu, 'Export...', 'Save data and/or clustering items')
         
         # Raise error
-        error = wx.MenuItem(fileMenu, wx.NewId(), 'Raise error')
-        fileMenu.AppendItem(error)
-        self.Bind(wx.EVT_MENU, self.OnRaiseError, id=error.GetId())
+#        error = wx.MenuItem(fileMenu, wx.NewId(), 'Raise error')
+#        fileMenu.AppendItem(error)
+#        self.Bind(wx.EVT_MENU, self.OnRaiseError, id=error.GetId())
         # Exit
         item = fileMenu.Append(wx.ID_EXIT,"E&xit"," Terminate the program")
         self.Bind(wx.EVT_MENU, self.onMenuExit, item)
@@ -348,11 +348,9 @@ class MainWindow(wx.Frame):
                 self.facsPlotPanel.updateSubplotGrid(int(math.ceil(len(dlg.Paths)/2.0)), 2)
             
             #TODO: move to data.io module
-            #TODO: bypass the dialogs if all checked
             # process each file selected
             for n, path in enumerate(dlg.Paths):
                 self.statusbar.SetStatusText('loading: ' + path, 0)
-                #TODO: include data annotations
                 (labels, data, annotations) = io.loadDataFile(path)
                 
                 # Give the user a brief preview of the data (10 rows) and allow
@@ -397,7 +395,6 @@ class MainWindow(wx.Frame):
                     dimDlg.Destroy()
                 else:
                     DataStore.getCurrentDataSet().selDims = list(allDims)
-                print 'Selected dimensions:', DataStore.getCurrentDataSet().selDims
 
                 # update the panel
                 self.facsPlotPanel.updateAxes([0,1])
@@ -555,12 +552,20 @@ class MainWindow(wx.Frame):
         
         dlg.Destroy()
     
+    
+    
     def onRecolorClusters(self, event):
+        """
+        Display a dialog that allows the user to select two clusterings, and
+        rearrange their order to reflect cluster similarity.
+        """
         dlg = ClusterRecolorSelectionDialog(self)
         if dlg.ShowModal() == wx.ID_OK:
             src = dlg.Source
             dst = dlg.Destination
-            cUtil.reassignClusterIDs(src, dst)
+            if (src is not None and dst is not None):
+                cUtil.reassignClusterIDs(src, dst)
+                self.SetStatusText("Cluster recoloring performed")
         
         dlg.Destroy()
             
