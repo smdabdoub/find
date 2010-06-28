@@ -144,7 +144,7 @@ class CustomDataTable(gridlib.PyGridTableBase):
 
 #---------------------------------------------------------------------------
 class DataGrid(gridlib.Grid):
-    def __init__(self, parent, data, labels):
+    def __init__(self, parent, data, labels, enableColMoving=True, enableHeaderRenaming=True):
         gridlib.Grid.__init__(self, parent, -1)
 
         table = CustomDataTable(data, labels)
@@ -155,16 +155,18 @@ class DataGrid(gridlib.Grid):
         self.SetTable(table, True)
 
         # Enable Column moving
-        gridmovers.GridColMover(self)
-        self.Bind(gridmovers.EVT_GRID_COL_MOVE, self.OnColMove, self)
-        self.colsMoved = False
+        if enableColMoving:
+            gridmovers.GridColMover(self)
+            self.Bind(gridmovers.EVT_GRID_COL_MOVE, self.OnColMove, self)
+            self.colsMoved = False
 
         # Enable Row moving
         #gridmovers.GridRowMover(self)
         #self.Bind(gridmovers.EVT_GRID_ROW_MOVE, self.OnRowMove, self)
         
         # Enable column label editing
-        self.Bind(gridlib.EVT_GRID_LABEL_LEFT_DCLICK, self.OnLabelLDClick, self)
+        if enableHeaderRenaming:
+            self.Bind(gridlib.EVT_GRID_LABEL_LEFT_DCLICK, self.OnLabelLDClick, self)
         
     @property
     def ColumnArrangement(self):
@@ -178,15 +180,18 @@ class DataGrid(gridlib.Grid):
         return self.GetTable().colLabels
     
 
-    def OnLabelLDClick(self, evt):
-        colID = self.GetTable().ids[evt.Col]
+    def OnLabelLDClick(self, event):
+        """
+        Called when a column header is double clicked on
+        """
+        colID = self.GetTable().ids[event.Col]
         colLabel = self.GetTable().colLabels[colID]
-        print "Label Double Click Event: clicked on", colLabel
         dlg = EditNameDialog(self, colLabel)
+        
         if (dlg.ShowModal() == wx.ID_OK):
             self.GetTable().SetColLabelValue(colID, dlg.Text)
             self.GetTable().Refresh()
-            print "Label changed to:", dlg.Text
+        
         dlg.Destroy()
 
     # Event method called when a column move needs to take place
