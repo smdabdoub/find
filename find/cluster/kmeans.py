@@ -148,7 +148,7 @@ class KMeansDialog(ClusterOptionsDialog):
             msg.append("Number of passes: A valid number must be entered.")
         else:
             val = int(self.txtNumPasses.Value)
-            if val < 1 or val > MAX_CLUSTERS:
+            if val < 1:
                 msg.append("Number of passes: A value greater than 1 must be entered")
                     
         return msg
