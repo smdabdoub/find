@@ -154,6 +154,8 @@ def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
         store[dStr] = {'filename':     dfname,
                        'displayname':  fdata.displayname, 
                        'labels':       fdata.labels, 
+                       'annotations':  fdata.annotations, 
+                       'analysis':     fdata.analysis, 
                        'ID':           fdata.ID,
                        'parent':       fdata.parent,
                        'children':     fdata.children,
@@ -170,8 +172,6 @@ def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
                      'infoExpanded':      fdata.infoExpanded[cID]}
             store[cStr] = csett
             bindata[cStr] = fdata.clustering[cID]
-            
-        # transformations
     
     # plots
     splots = []
@@ -219,7 +219,9 @@ def loadState(dir, filename):
     for dID in datakeys:
         dStr = 'data-%s' % dID
         dsett = store[dStr]
-        fdata = FacsData(dsett['filename'], dsett['labels'], bindata[dStr], dsett['parent'])
+        fdata = FacsData(dsett['filename'], dsett['labels'], bindata[dStr], 
+                         annotations=dsett['annotations'], analysis=dsett['analysis'],
+                         parent=dsett['parent'])
         fdata.displayname = dsett['displayname']
         fdata.ID = dsett['ID']
         fdata.children = dsett['children']
