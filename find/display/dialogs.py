@@ -178,7 +178,8 @@ class DataInfoDialog(wx.Dialog):
     FCS 3.0 files.
     """
     def __init__(self, parent, data):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Data Information', style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Data Information', 
+                           style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
         self.CenterOnParent()
         
         textAnn = sorted(data.annotations['text'].iteritems())
@@ -234,9 +235,9 @@ class ClusterInfoDialog(wx.Dialog):
         
         self.formSizer = None
         if isolate:
-            self.formSizer = wx.FlexGridSizer(numClusters+1, numColumns+1, hgap=hGap, vgap=vGap) #rows,cols,vgap,hgap
+            self.formSizer = wx.FlexGridSizer(numClusters+1, numColumns+1, hgap=hGap, vgap=vGap)
         else:
-            self.formSizer = wx.FlexGridSizer(numClusters, numColumns, hgap=hGap, vgap=vGap) #rows,cols,vgap,hgap
+            self.formSizer = wx.FlexGridSizer(numClusters, numColumns, hgap=hGap, vgap=vGap)
         # header row
         if isolate:
             self.formSizer.Add(wx.StaticText(self, -1, 'Select', (5,10)), 1, wx.EXPAND)
@@ -283,38 +284,51 @@ class ClusterInfoDialog(wx.Dialog):
         
 
 class ClusterRecolorSelectionDialog(wx.Dialog):
-    def __init__(self, parent, ):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Select clusterings to match colors")
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Select clusterings to match colors", 
+                           style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(500, 150))
         self.CenterOnParent()
     
-        data = DataStore.getData()
-        self.listLabels = [wx.StaticText(self, -1, data[i].displayname) for i in data]
-        self.clusterLists = [wx.ListBox(self, wx.NewId(), style=wx.LB_SINGLE, 
-                                        choices=[getStringRepr(data[i].methodIDs[cidx]) + " " + 
-                                                 str(cidx+1) for cidx in data[i].clustering]) for i in data]
+        allData = DataStore.getData()
+        self.choices = []
+        self.choiceIDs = []
         
-        self.Sizer = wx.FlexGridSizer(2, len(self.clusterLists), vgap=10, hgap=20)
-        self.Sizer.AddMany([(label, 1, wx.EXPAND) for label in self.listLabels])
-        self.Sizer.AddMany([(list, 1, wx.EXPAND) for list in self.clusterLists])
-        self.Sizer.AddSpacer(10)
-        self.Sizer.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 1, wx.EXPAND)
+        # Populate the choices list with string, and populate the 
+        # choiceIDs list with (dataID, clusteringID) tuples so the 
+        # combo box selection can be tied to the data
+        for didx in allData:
+            fcData = allData[didx]
+            for cidx in fcData.clustering: 
+                self.choices.append(fcData.displayname + ": " + 
+                            getStringRepr(fcData.methodIDs[cidx]) + " " + 
+                            str(cidx+1))
+                self.choiceIDs.append((fcData.ID, cidx))
         
-    
-    
-    def _selectedClusters(self):
-        selections = []
-        for i,list in enumerate(self.clusterLists):
-            selections.append((i,list.Selection))
+        
+        self.cbxSourceClustering = wx.ComboBox(self, choices=self.choices, style=wx.CB_READONLY)
+        self.cbxDestClustering = wx.ComboBox(self, choices=self.choices, style=wx.CB_READONLY)
 
-        return selections
+        
+        self.formSizer = wx.GridSizer(3, 2, vgap=5, hgap=5)
+        self.formSizer.AddF(wx.StaticText(self, -1, 'First Clustering:'), wx.SizerFlags().Expand())
+        self.formSizer.AddF(self.cbxSourceClustering, wx.SizerFlags(1).Expand())
+        self.formSizer.AddF(wx.StaticText(self, -1, 'Second Clustering:'), wx.SizerFlags().Expand())
+        self.formSizer.AddF(self.cbxDestClustering, wx.SizerFlags(1).Expand())
+        
+        self.Sizer = wx.BoxSizer(wx.VERTICAL)
+        self.Sizer.AddF(self.formSizer, wx.SizerFlags(1).Expand().Border(wx.ALL, 10))
+        self.Sizer.AddF(self.CreateButtonSizer(wx.OK|wx.CANCEL), wx.SizerFlags().Expand().Border(wx.BOTTOM, 10))
+
     
     @property
     def Source(self):
-        return self._selectedClusters()[0]
+        if self.cbxSourceClustering.Selection >= 0:
+            return self.choiceIDs[self.cbxSourceClustering.Selection]
         
     @property
     def Destination(self):
-        return self._selectedClusters()[1]
+        if self.cbxDestClustering.Selection >= 0:
+            return self.choiceIDs[self.cbxDestClustering.Selection]
     
     
     
