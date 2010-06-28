@@ -170,7 +170,8 @@ class FigureSetupDialog(wx.Dialog):
     def getColumns(self):
         return int(self.txtColumns.GetValue())
         
-        
+
+
 class DataInfoDialog(wx.Dialog):
     """
     This class displays (for now) the header information embedded in 
@@ -180,10 +181,10 @@ class DataInfoDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Data Information', style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
         self.CenterOnParent()
         
-        textAnn = data.annotations['text']
+        textAnn = sorted(data.annotations['text'].iteritems())
         
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.dataGrid = DataGrid(self, textAnn.items(), ['Parameter', 'Value'])
+        self.dataGrid = DataGrid(self, textAnn, ['Parameter', 'Value'], False, False)
         
         self.sizer.Add(self.dataGrid, 1, wx.EXPAND)
         self.sizer.AddSpacer(5)
