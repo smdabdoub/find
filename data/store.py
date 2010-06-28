@@ -164,25 +164,13 @@ class DataStore(object):
     def sortData(cls):
         # sort the dict based on key (increasing [1 for decreasing?])
         return sorted(cls._facsData.iteritems(), key=itemgetter(0))
-    
-
-class Data(object):
-    """
-    This is an abstract representation of some form of data. This could be an 
-    actual data set or some special representation (full or reduced) of it such
-    as a clustering or a transformation. 
-    """
-    def __init__(self, ID, data, name):
-        pass
-
-
 
 
 class FacsData(object):
     """
     The FacsData class holds all information regarding a single FACS dataset.
     """
-    def __init__(self, filename, labels, data, annotations=None, analysis=None, parent=None):
+    def __init__(self, filename, labels, data, annotations={}, analysis=None, parent=None):
         self.filename = filename
         self.displayname = filename
         self.labels = labels
@@ -304,14 +292,6 @@ class Clustering(object):
         self.opts = opts
         self.selDims = dims
         
-        
-        
-class Transformation(object):
-    """
-    This class represents a single transformation of the original data set (e.g. PCA)
-    """
-    def __init__(self, ID, data, methodID, options, ):
-        pass
         
         
         
