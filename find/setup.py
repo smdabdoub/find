@@ -27,12 +27,11 @@ if sys.platform == "win32":
 if sys.platform == "darwin":
     from setuptools import setup
     
-    APP = ['find.py']
     DATA_FILES = []
-    OPTIONS = {'argv_emulation': False}
+    OPTIONS = {'argv_emulation': False, 'iconfile': 'find_mac.icns'}
     
     setup(
-        app=APP,
+        app=['find.py'],
         data_files=DATA_FILES,
         options={'py2app': OPTIONS},
         setup_requires=['py2app'],
