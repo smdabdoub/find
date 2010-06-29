@@ -16,8 +16,8 @@ if sys.platform == "win32":
     import matplotlib
     
     setup(
-        windows=[{"script" : "find.py"}],
-        options={'py2exe': {'includes' : ['matplotlib.backends', 'matplotlib.figure', 'numpy', 'matplotlib.backends.backend_wxagg'],
+        windows=[{"script" : "find.py", "icon_resources": [(1, "find_white.ico")]}],
+        options={'py2exe': {'includes' : ['matplotlib.backends', 'matplotlib.figure', 'numpy', 'matplotlib.backends.backend_wxagg', 'scipy.stats'],
                             'excludes': ['_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg', '_fltkagg', '_gtk', '_gtkcairo'],
                             'dll_excludes': ['libgdk-win32-2.0-0.dll', 'libgdk-pixbuf-2.0-0.dll', 'libgobject-2.0-0.dll']}
                             },
