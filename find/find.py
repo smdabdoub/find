@@ -19,6 +19,7 @@ from data.store import FacsData
 from data import io
 import error
 import plugin
+import transforms.methods as tm
 
 # 3rd party imports
 import wx
@@ -62,7 +63,7 @@ class MainWindow(wx.Frame):
         
         self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D)
         #self.splitter.SetBackgroundColour((150, 150, 150))
-        #self.splitter.SetBackgroundColour('white')
+        self.splitter.SetBackgroundColour('white')
         self.rightPanel = wx.Panel(self.splitter)
         self.facsPlotPanel = dv.FacsPlotPanel(self.rightPanel)
         self.treeCtrlPanel = dv.FacsTreeCtrlPanel(self.splitter)
@@ -196,17 +197,15 @@ class MainWindow(wx.Frame):
 
     ## GENERAL METHODS ##
     def setup(self):
-        pass
-        # Icon
-#        image = wx.Image('find16.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-#        icon = wx.EmptyIcon()
-#        icon.CopyFromBitmap(image)
-#        self.SetIcon(icon) 
+        # Icons
+        ib = wx.IconBundle()
+        ib.AddIconFromFile("find_white.ico", wx.BITMAP_TYPE_ANY)
+        self.SetIcons(ib)
         
         # Plugins
         plugin.importPlugins(plugin.discoverPlugins())
-        self.generatePluginsMenu()
-        
+
+
     def updateAxesList(self, labels, selectedAxes=(0,1)):
         """
         Update the axis selection boxes
@@ -214,8 +213,6 @@ class MainWindow(wx.Frame):
         for i in range(len(self.dataSelectors)):
             self.dataSelectors[i].SetItems(labels)
             self.dataSelectors[i].SetSelection(selectedAxes[i])
-            
-        
         
     
     def setSelectedPlotStatus(self, status):
@@ -256,7 +253,13 @@ class MainWindow(wx.Frame):
                 
                 # Transforms plugins
                 elif type_ == plugin.pluginTypes[2]:
-                    continue
+                    pID = wx.NewId()
+                    tmethod, tscaleClass = eval('module.'+method)()
+                    doc = tmethod.__doc__.split(';')
+                    strID = doc[0].strip()
+                    name  = doc[1].strip()
+                    descr = doc[2].strip()
+                    tm.addPluginMethod((strID, pID, name, descr, tmethod, tscaleClass))
                 
                 # Plotting plugins
                 elif type_ == plugin.pluginTypes[3]:
@@ -606,7 +609,7 @@ class MainWindow(wx.Frame):
         
 if __name__ == '__main__':
     app = wx.PySimpleApp()
-    frame = MainWindow(None, -1, "FIND Display")
+    frame = MainWindow(None, -1, "FIND: Flow Investigation using N-Dimensions")
     app.MainLoop()
     sys.exit(0)
         
