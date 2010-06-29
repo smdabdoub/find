@@ -4,13 +4,13 @@ for data transformations.
 
 @author: Shareef Dabdoub
 '''
-from transforms.log import log
+import transforms.log as log
 from matplotlib import scale as mscale
 import wx
 
 methods = {}
 methods['log'] = ('log', wx.NewId(), 'Logarithmic Transform', 
-                  'Transforms data to a logarithmic scale', log, None, False)
+                  'Transforms data to a logarithmic scale', log.log, None, False)
 
 def addPluginMethod(descriptor):
     """
