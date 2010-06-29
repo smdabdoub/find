@@ -62,8 +62,8 @@ class MainWindow(wx.Frame):
         self.dirname=''
         
         self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D)
-        #self.splitter.SetBackgroundColour((150, 150, 150))
-        self.splitter.SetBackgroundColour('white')
+        self.splitter.SetBackgroundColour((150, 150, 150))
+        #self.splitter.SetBackgroundColour('white')
         self.rightPanel = wx.Panel(self.splitter)
         self.facsPlotPanel = dv.FacsPlotPanel(self.rightPanel)
         self.treeCtrlPanel = dv.FacsTreeCtrlPanel(self.splitter)
@@ -198,9 +198,10 @@ class MainWindow(wx.Frame):
     ## GENERAL METHODS ##
     def setup(self):
         # Icons
-        ib = wx.IconBundle()
-        ib.AddIconFromFile("find_white.ico", wx.BITMAP_TYPE_ANY)
-        self.SetIcons(ib)
+        if sys.platform == "win32":
+            ib = wx.IconBundle()
+            ib.AddIconFromFile("find_white.ico", wx.BITMAP_TYPE_ANY)
+            self.SetIcons(ib)
         
         # Plugins
         plugin.importPlugins(plugin.discoverPlugins())
