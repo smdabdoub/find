@@ -286,7 +286,7 @@ class ClusterInfoDialog(wx.Dialog):
 class ClusterRecolorSelectionDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, "Select clusterings to match colors", 
-                           style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(500, 150))
+                           style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(400, 150))
         self.CenterOnParent()
     
         allData = DataStore.getData()
@@ -309,11 +309,12 @@ class ClusterRecolorSelectionDialog(wx.Dialog):
         self.cbxDestClustering = wx.ComboBox(self, choices=self.choices, style=wx.CB_READONLY)
 
         
-        self.formSizer = wx.GridSizer(3, 2, vgap=5, hgap=5)
-        self.formSizer.AddF(wx.StaticText(self, -1, 'First Clustering:'), wx.SizerFlags().Expand())
-        self.formSizer.AddF(self.cbxSourceClustering, wx.SizerFlags(1).Expand())
-        self.formSizer.AddF(wx.StaticText(self, -1, 'Second Clustering:'), wx.SizerFlags().Expand())
-        self.formSizer.AddF(self.cbxDestClustering, wx.SizerFlags(1).Expand())
+        self.formSizer = wx.FlexGridSizer(2, 2, vgap=5, hgap=5)
+        self.formSizer.FlexibleDirection = wx.HORIZONTAL
+        self.formSizer.AddF(wx.StaticText(self, -1, 'First Clustering:'), wx.SizerFlags(1).Expand())
+        self.formSizer.AddF(self.cbxSourceClustering, wx.SizerFlags(2).Expand())
+        self.formSizer.AddF(wx.StaticText(self, -1, 'Second Clustering:'), wx.SizerFlags(1).Expand())
+        self.formSizer.AddF(self.cbxDestClustering, wx.SizerFlags(2).Expand())
         
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
         self.Sizer.AddF(self.formSizer, wx.SizerFlags(1).Expand().Border(wx.ALL, 10))
