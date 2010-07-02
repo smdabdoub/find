@@ -148,7 +148,7 @@ class FigureSetupDialog(wx.Dialog):
         self.txtColumns = wx.TextCtrl(self, wx.ID_ANY, str(cols))
         
         # create a table of label-input controls
-        self.formSizer = wx.FlexGridSizer(3, 2, hgap=10) #rows,cols,vgap,hgap
+        self.formSizer = wx.FlexGridSizer(3, 2, hgap=10)
         self.formSizer.SetFlexibleDirection(wx.HORIZONTAL)
         self.formSizer.Add(wx.StaticText(self, -1, 'Number of rows:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtRows, 1)
