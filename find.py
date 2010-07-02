@@ -248,6 +248,7 @@ class MainWindow(wx.Frame):
                         # Create the menu item
                         submenus[type_].Append(cID, name, descr)
                         self.Bind(wx.EVT_MENU, self.onCluster, id=cID)
+                #TODO: Implement Analysis plugins
                 # Analysis plugins
                 elif type_ == plugin.pluginTypes[1]:
                     continue
@@ -514,7 +515,7 @@ class MainWindow(wx.Frame):
         
         
     def onSetupSubplots(self, event):
-        dlg = FigureSetupDialog(self)
+        dlg = FigureSetupDialog(self, self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
         if dlg.ShowModal() == wx.ID_OK:
             self.facsPlotPanel.updateSubplotGrid(dlg.getRows(), dlg.getColumns())
         

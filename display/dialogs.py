@@ -139,19 +139,20 @@ class FigureSetupDialog(wx.Dialog):
     This dialog allows the user to specify the grid for subplots on the main figure.
     """
     
-    def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(320, 150))
+    def __init__(self, parent, rows=1, cols=1):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(250, 150))
         self.CenterOnParent()
         
         # create form controls
-        self.txtRows = wx.TextCtrl(self, wx.ID_ANY, '1')
-        self.txtColumns = wx.TextCtrl(self, wx.ID_ANY, '2')
+        self.txtRows = wx.TextCtrl(self, wx.ID_ANY, str(rows))
+        self.txtColumns = wx.TextCtrl(self, wx.ID_ANY, str(cols))
         
         # create a table of label-input controls
-        self.formSizer = wx.GridSizer(3, 2, hgap=10) #rows,cols,vgap,hgap
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of rows:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer = wx.FlexGridSizer(3, 2, hgap=10) #rows,cols,vgap,hgap
+        self.formSizer.SetFlexibleDirection(wx.HORIZONTAL)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of rows:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtRows, 1)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of columns:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Number of columns:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtColumns, 1)
         
         # create the button row
