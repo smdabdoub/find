@@ -8,7 +8,7 @@ Contents:
    :maxdepth: 2
    
    intro.rst
-   opening_files.rst
+   data.rst
    viz.rst
    analysis.rst
    saving.rst
