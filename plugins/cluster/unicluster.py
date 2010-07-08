@@ -11,12 +11,12 @@ __all__ = ['unicluster_register']
 
 def unicluster(data, **kwargs):
     """
-    Unicluster; Creates one large cluster that includes all the data;
+    unicluster; Unicluster; Creates one large cluster that includes all the data;
     
     @var data: The input data to be clustered.
     """
     clustering = []
-    for i in range(len(data)):
+    for _ in range(len(data)):
         clustering.append(0)
         
     return clustering,'One cluster found'

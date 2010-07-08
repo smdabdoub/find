@@ -26,8 +26,8 @@ def getClusterDialog(clusterID, parent):
             
  
 
-dialogs[methods.ID_KMEANS] = methods.kmeans.KMeansDialog
-dialogs[methods.ID_BAKKER_SCHUT] = methods.bakker_schut.BakkerSchutKMeansDialog
+dialogs[methods.strID(methods.ID_KMEANS)] = methods.kmeans.KMeansDialog
+dialogs[methods.strID(methods.ID_BAKKER_SCHUT)] = methods.bakker_schut.BakkerSchutKMeansDialog
 #dialogs[methods.ID_AUTOCLASS] = None
 
 

@@ -147,8 +147,8 @@ class MainWindow(wx.Frame):
         for id in clusterMethods:
             info = clusterMethods[id]
             # indicates this method is a plugin
-            if (not info[4]):
-                clusterMenu.Append(info[0], info[1], info[2])
+            if (not info[-1]):
+                clusterMenu.Append(info[0], info[2], info[3])
                 self.Bind(wx.EVT_MENU, self.onCluster, id=info[0])
         
         # Data menu
@@ -241,9 +241,10 @@ class MainWindow(wx.Frame):
                         cID = wx.NewId()
                         cmethod, cdialog = eval('module.'+method)()
                         doc = cmethod.__doc__.split(';')
-                        name = doc[0].strip()
-                        descr = doc[1].strip()
-                        cMthds.addPluginMethod((cID, name, descr, cmethod, True))
+                        strID = doc[0].strip()
+                        name = doc[1].strip()
+                        descr = doc[2].strip()
+                        cMthds.addPluginMethod((cID, strID, name, descr, cmethod, True))
                         cDlgs.addPluginDialog(cID, cdialog)
                         # Create the menu item
                         submenus[type_].Append(cID, name, descr)
@@ -482,17 +483,17 @@ class MainWindow(wx.Frame):
             2. Passes the data and the returned method options to L{cluster.methods.cluster}
             3. Passes the returned cluster membership list to the FacsPlotPanel for display
         """
-        dlg = cDlgs.getClusterDialog(event.GetId(), self)
+        dlg = cDlgs.getClusterDialog(cMthds.strID(event.GetId()), self)
         if dlg.ShowModal() == wx.ID_OK:
             if (DataStore.getCurrentDataSet() is not None):
-                self.statusbar.SetStatusText('Running %s clustering...' % cMthds.methods[event.GetId()][1], 0)
+                self.statusbar.SetStatusText('Running %s clustering...' % cMthds.getStringRepr(event.GetId()), 0)
                 fcs = DataStore.getCurrentDataSet()
                 data = fcs.data
                 # Remove columns from analysis as specified by the user
                 if fcs.selDims:
                     data = dh.filterData(data, fcs.selDims)
                 clusterIDs, msg = cMthds.cluster(event.GetId(), data, **dlg.getMethodArgs())
-                DataStore.addClustering(event.GetId(), clusterIDs, dlg.getMethodArgs())
+                DataStore.addClustering(cMthds.strID(event.GetId()), clusterIDs, dlg.getMethodArgs())
                 clusteringIndex = DataStore.getCurrentDataSet().clustering.keys()[-1]
                 self.statusbar.SetStatusText(msg, 0)
                 if (dlg.isApplyChecked()):

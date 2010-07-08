@@ -10,8 +10,6 @@ import  wx.lib.gridmovers   as  gridmovers
 class CustomDataTable(gridlib.PyGridTableBase):
     def __init__(self, data, labels):
         gridlib.PyGridTableBase.__init__(self)
-        self.data = data
-        self.labels = labels
 
         self.ids = range(len(labels))
 
@@ -61,9 +59,6 @@ class CustomDataTable(gridlib.PyGridTableBase):
     def SetColLabelValue(self, col, label):
         id = self.ids[col]
         self.colLabels[id] = label
-    
-    def ReorderColLabels(self):
-        self.colLabels = [self.colLabels[id] for id in self.ids]
 
     #--------------------------------------------------
     # Methods added for demo purposes.
@@ -199,7 +194,6 @@ class DataGrid(gridlib.Grid):
         frm = evt.GetMoveColumn()       # Column being moved
         to = evt.GetBeforeColumn()      # Before which column to insert
         self.GetTable().MoveColumn(frm,to)
-        self.GetTable().ReorderColLabels()
         self.colsMoved = True
 
     # Event method called when a row move needs to take place

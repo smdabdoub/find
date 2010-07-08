@@ -68,6 +68,7 @@ def strID(methodID):
     @rtype: string
     @return: The name of the specified plotting algorithm
     """
+    #TODO:remove unnecessary check
     if (methodID is not None):
         for id in methods:
             if methods[id][1] == methodID:

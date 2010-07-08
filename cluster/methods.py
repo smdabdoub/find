@@ -17,16 +17,16 @@ ID_BAKKER_SCHUT = wx.NewId()
 ID_AUTOCLASS = wx.NewId()
 
 methods = {}
-methods[ID_KMEANS] = (ID_KMEANS, 'k-means', 
+methods['kmeans'] = (ID_KMEANS, 'kmeans', 'k-means', 
                       'Cluster the data using the k-means algorithm', 
                       kmeans.kmeans, False)
-methods[ID_BAKKER_SCHUT] = (ID_BAKKER_SCHUT, 'Bakker Schut k-means', 
+methods['bskmeans'] = (ID_BAKKER_SCHUT, 'bskmeans', 'Bakker Schut k-means', 
                             """Cluster the data using the variant of the 
                                k-means algorithm designed for use with Flow 
                                Cytometry data and published by Bakker Schut 
                                et. al.""", 
                             bakker_schut.bakker_kMeans, False)
-#methods[ID_AUTOCLASS] = (ID_AUTOCLASS, 'AutoClass', 
+#methods['autoclass'] = (ID_AUTOCLASS, 'autoclass', 'AutoClass', 
 #                         'Cluster the data using the AutoClass algorithm', 
 #                         None, False)
 
@@ -39,7 +39,7 @@ def addPluginMethod(descriptor):
                      description, function reference, and plugin flag (True
     """
     global methods
-    methods[descriptor[0]] = descriptor
+    methods[descriptor[1]] = descriptor
     
 
 def getAvailableMethods():
@@ -54,27 +54,78 @@ def getAvailableMethods():
     """
     return methods
 
-def getStringRepr(methodID):
+
+def _getMethodTuple(id):
+    """
+    Acts as a central location for retrieving information on methods.
+    
+    Note: Only meant for use by methods in this module.
+    """
+    try:
+        id = strID(int(id))
+    except ValueError:
+        pass
+        
+    if id in methods:
+        return methods[id]
+
+
+
+def strID(intID):
+    """
+    Get the string ID of a clustering method by its int ID.
+    
+    @type id: int
+    @param id: One of the module-defined ID_* constants for the available methods.
+    @rtype: string
+    @return: The string ID of the specified clustering algorithm
+    """
+    for id in methods:
+        if methods[id][0] == intID:
+            return methods[id][1]
+        
+
+
+def getStringRepr(id):
     """
     Get the name of a clustering method by its ID.
     
-    @type methodID: int
-    @param methodID: One of the module-defined ID_* constants for the available methods.
+    @type id: int
+    @param id: One of the module-defined ID_* constants for the available methods.
     @rtype: string
     @return: The name of the specified clustering algorithm
     """
-    if (methodID is not None):
-        return methods[methodID][1]
-    
+    t = _getMethodTuple(id)
+    if t is not None:
+        return t[2]
 
-def cluster(clusterType, data, **kwargs):
+
+
+def getMethod(id):
+    """
+    Retrieve a plotting method by its ID.
+    
+    :@type id: int or str
+    :@param id: The identifier for a plotting method. An int id is required
+                for the wx event subsystem, but a string id is required as a 
+                unique id for plugin authors to specify dependencies on 
+                plotting methods.
+    :@rtype: method
+    :@return: The method associated with the ID, or None.
+    """
+    t = _getMethodTuple(id)
+    if t is not None:
+        return t[-2]
+    
+       
+
+def cluster(id, data, **kwargs):
     """
     Intended to be a pass-through interface for performing different clustering algorithms.
     
-    @type clusterType: integer
-    @param clusterType: Specifies the type of clustering algorithm to use. 
-        Module pre-defined constants such as ID_KMEANS can be used. 
-    @type data: array
+    @type id: int or str
+    @param id: Specifies the type of clustering algorithm to use.
+    @type data: numpy array
     @param data: The data to be clustered.
     @type kwargs: dict
     @param kwargs: Used to pass any arguments specific to a clustering algorithm.
@@ -85,7 +136,7 @@ def cluster(clusterType, data, **kwargs):
     @return: A list where each element indicates the cluster membership of the 
         corresponding index in the original data and a string message
     """
-    method = methods[clusterType][3]
+    method = getMethod(id)
     return method(data, **kwargs)
 
 
