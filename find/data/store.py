@@ -111,7 +111,12 @@ class DataStore(object):
             currently selected index.
         """
         if (cls._selectedIndex is not None):
-            return cls._facsData[cls._selectedIndex]
+            try:
+                cds = cls._facsData[cls._selectedIndex]
+            except KeyError:
+                cds = None
+            
+            return cds
     
     @classmethod
     def getCurrentIndex(cls):
