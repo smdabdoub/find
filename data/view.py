@@ -729,6 +729,10 @@ class FacsTreeCtrlPanel(wx.Panel):
         """
         self.Parent.TopLevelParent.facsPlotPanel.deleteAssociatedSubplots(self.getSanitizedItemSelectionData())
         self.applyToSelection(DataStore.remove, FacsData.removeClustering)
+        # if all data deleted, clear axes selectors
+        if len(DataStore.getData()) == 0:
+            self.Parent.TopLevelParent.updateAxesList([])
+        
         self.updateTree()
         
     def setDataExpanded(self, item, flag):
