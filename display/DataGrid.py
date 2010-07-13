@@ -57,8 +57,7 @@ class CustomDataTable(gridlib.PyGridTableBase):
         return self.rowLabels[row]
     
     def SetColLabelValue(self, col, label):
-        id = self.ids[col]
-        self.colLabels[id] = label
+        self.colLabels[col] = label
 
     #--------------------------------------------------
     # Methods added for demo purposes.
