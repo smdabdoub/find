@@ -210,10 +210,11 @@ class MainWindow(wx.Frame):
     def updateAxesList(self, labels, selectedAxes=(0,1)):
         """
         Update the axis selection boxes
-        """
+        """ 
         for i in range(len(self.dataSelectors)):
             self.dataSelectors[i].SetItems(labels)
-            self.dataSelectors[i].SetSelection(selectedAxes[i])
+            if len(labels) >= len(self.dataSelectors):
+                self.dataSelectors[i].SetSelection(selectedAxes[i])
         
     
     def setSelectedPlotStatus(self, status):
@@ -345,18 +346,29 @@ class MainWindow(wx.Frame):
         allColArr = []
         allDims   = []
         fColsMoved = False
+        numLoaded = 0
+        
+        # keep track of the common number of dimensions for datasets
+        numDims = DataStore.getCurrentDataSet()
+        if numDims is not None:
+            numDims = len(numDims.labels)
         
         dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", formats, wx.FD_OPEN|wx.FD_MULTIPLE)
         if dlg.ShowModal() == wx.ID_OK:
-            if (len(dlg.Paths) > 1):
-                # Create an n/2 x 2 grid for the n selected data files
-                self.facsPlotPanel.updateSubplotGrid(int(math.ceil(len(dlg.Paths)/2.0)), 2)
-            
             #TODO: move to data.io module
             # process each file selected
             for n, path in enumerate(dlg.Paths):
                 self.statusbar.SetStatusText('loading: ' + path, 0)
                 (labels, data, annotations) = io.loadDataFile(path)
+                
+                # make sure the new file matches dimensions of loaded files
+                if numDims is None:
+                    numDims = len(labels)
+                elif len(labels) != numDims:
+                    wx.MessageBox("Error loading file: %s\n\nThe number of channels does not match those in currently loaded datasets. \n\nThis file will not be loaded." % dlg.Filenames[n],
+                                  "File Error", wx.OK | wx.ICON_ERROR)
+                    continue
+                    
                 
                 # Give the user a brief preview of the data (10 rows) and allow
                 # column rearrangement and renaming
@@ -387,7 +399,9 @@ class MainWindow(wx.Frame):
                     
                 # update the DataStore
                 DataStore.add(FacsData(dlg.Filenames[n], labels, data, annotations=annotations))
-                self.updateAxesList(labels)
+                numLoaded += 1
+                if n == 0:
+                    self.updateAxesList(labels)
                     
                 if (not allDims):
                     # Allow the user to choose columns for use in analysis
@@ -406,6 +420,9 @@ class MainWindow(wx.Frame):
                 if (len(self.facsPlotPanel.subplots) == 0 or len(dlg.Paths) > 1):
                     self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex())
         
+            # Create an n/2 x 2 grid for the n selected data files
+            if (numLoaded > 1):
+                self.facsPlotPanel.updateSubplotGrid(int(math.ceil(numLoaded/2.0)), 2)
             self.statusbar.SetStatusText('All data files loaded.')
             self.treeCtrlPanel.updateTree()
             
