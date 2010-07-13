@@ -140,12 +140,12 @@ class FigureSetupDialog(wx.Dialog):
     """
     
     def __init__(self, parent, rows=1, cols=1):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(250, 150))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(230, 150))
         self.CenterOnParent()
         
         # create form controls
-        self.txtRows = wx.TextCtrl(self, wx.ID_ANY, str(rows))
-        self.txtColumns = wx.TextCtrl(self, wx.ID_ANY, str(cols))
+        self.txtRows = wx.TextCtrl(self, wx.ID_ANY, str(rows), size=(40,20))
+        self.txtColumns = wx.TextCtrl(self, wx.ID_ANY, str(cols), size=(40,20))
         
         # create a table of label-input controls
         self.formSizer = wx.FlexGridSizer(3, 2, hgap=10)
@@ -161,7 +161,7 @@ class FigureSetupDialog(wx.Dialog):
         # main sizer
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.formSizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 20)
-        self.sizer.Add(self.buttonSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        self.sizer.Add(self.buttonSizer, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 10)
         self.SetSizer(self.sizer)
         
         
