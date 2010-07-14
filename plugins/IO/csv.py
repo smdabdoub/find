@@ -5,7 +5,7 @@ read and write CSV files from FACS data.
 from data.io import FILE_INPUT, FILE_OUTPUT
 from plugins.pluginbase import IOPlugin 
 
-from matplotlib import mlab
+from numpy import loadtxt
 
 __all__ = ['register_csv']
 
@@ -30,15 +30,13 @@ class CSVPlugin(IOPlugin):
         @return: A tuple containing a list of column labels and numpy array 
             containing the actual FACS data.
         """
-        print 'loading:', self.filename
         # Retrieve first line of column labels
         facsFile = open(self.filename,'r')
         labels = facsFile.readline().rstrip().replace('"','').split(',')
         facsFile.close()
-        print 'Column labels:',labels
         # load actual data
-        data = mlab.load(self.filename, delimiter=',', skiprows=1)
-        return (labels,data, None)
+        data = loadtxt(self.filename, delimiter=',', skiprows=1)
+        return (labels,data, {})
     
     def save(self, facsData):
         """
