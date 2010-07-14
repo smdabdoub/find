@@ -182,8 +182,11 @@ class DataInfoDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Data Information', 
                            style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
         self.CenterOnParent()
-        
-        textAnn = sorted(data.annotations['text'].iteritems())
+        textAnn = [('file name',data.filename)]
+        textAnn.append(('display name', data.displayname))
+        textAnn.append(('selected dimensions', ', '.join([data.labels[i] for i in data.selDims])))
+        if 'text' in data.annotations:
+            textAnn.extend(sorted(data.annotations['text'].iteritems()))
         
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.dataGrid = DataGrid(self, textAnn, ['Parameter', 'Value'], False, False)
