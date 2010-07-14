@@ -112,7 +112,7 @@ class FacsPlotPanel(PlotPanel):
         self.subplots = []
         self.subplotRows = 1
         self.subplotCols = 1
-        self.selectedSubplot = None
+        self._selectedSubplotIndex = None
         
 
         # initiate plotter
@@ -123,15 +123,19 @@ class FacsPlotPanel(PlotPanel):
         
         
     def OnClick(self, event):
-        if (event.inaxes is not None):
-            plotNum = event.inaxes.get_title().split(':')[0]
-            self.setSelectedSubplot(int(plotNum))
-            
-            # Right click
-            if (event.button == 3):
-                pt = event.guiEvent.GetPosition()
-                self.PopupMenuXY(FigurePopupMenu(self), pt.x, pt.y)
+        try:
+            if (event.inaxes is not None):
+                plotNum = event.inaxes.get_title().split(':')[0]
+                self.SelectedSubplotIndex = int(plotNum)
                 
+                # Right click
+                if (event.button == 3):
+                    pt = event.guiEvent.GetPosition()
+                    self.PopupMenuXY(FigurePopupMenu(self), pt.x, pt.y)
+        except wx.PyAssertionError as pae:
+            print pae
+    
+
         
     def addSubplot(self, dataStoreIndex, clusteringIndex = None, plotType = pmethods.ID_PLOTS_SCATTER_2D):
         """
@@ -148,7 +152,7 @@ class FacsPlotPanel(PlotPanel):
         """
         n = len(self.subplots)+1
         self.subplots.append(Subplot(n, dataStoreIndex, clusteringIndex, plotType))
-        self.setSelectedSubplot(n)
+        self.SelectedSubplotIndex = n
         self.draw()    
         
     
@@ -156,15 +160,15 @@ class FacsPlotPanel(PlotPanel):
         """
         Deletes the currently selected subplot from the figure.
         """
-        if (self.selectedSubplot > 0):
-            del self.subplots[self.selectedSubplot-1]
+        if (self.SelectedSubplotIndex is not None):
+            del self.subplots[self.SelectedSubplotIndex-1]
             self.renumberPlots()
             self.draw()
         
         # when the selected subplot is deleted, there is no longer a selection
-        self.setSelectedSubplot(None)
+        self.SelectedSubplotIndex = None
         
-        
+    #TODO: remove subplots associated with children
     def deleteAssociatedSubplots(self, ids):
         """
         Delete any subplots associated with the specified data or clustering ids
@@ -192,7 +196,7 @@ class FacsPlotPanel(PlotPanel):
         """
         Allows the user to set the title of the selected subplot.
         """
-        subplot = self.subplots[self.selectedSubplot-1]
+        subplot = self.subplots[self.SelectedSubplotIndex-1]
         titleDlg = EditNameDialog(self, subplot.Title.split(':')[1].strip())
         if (titleDlg.ShowModal() == wx.ID_OK):
             subplot.Title = titleDlg.Text
@@ -212,10 +216,10 @@ class FacsPlotPanel(PlotPanel):
             subplot.Title = subplot.Title.split(': ')[1]
         
         if (len(self.subplots) > 0):
-            self.setSelectedSubplot(len(self.subplots))
+            self.SelectedSubplotIndex = len(self.subplots)
         else:
-            self.setSelectedSubplot(0)
-            
+            self.SelectedSubplotIndex = None
+                        
     
     def loadSavedPlots(self, subplotDicts, currentSubplot):
         """
@@ -232,7 +236,7 @@ class FacsPlotPanel(PlotPanel):
         for i, subplot in enumerate(self.subplots):
             subplot.load(subplotDicts[i])
         
-        self.setSelectedSubplot(currentSubplot)
+        self.SelectedSubplotIndex = currentSubplot
             
     
     def plotData(self, dataID, clusterID=None, plotType=pmethods.ID_PLOTS_SCATTER_2D):
@@ -246,63 +250,67 @@ class FacsPlotPanel(PlotPanel):
         @type plotType: int
         @var plotType: The type of plot to be draw. Defaults to scatter plot.     
         """
-        if (self.selectedSubplot > 0):
-            self.subplots[self.selectedSubplot-1] = Subplot(self.selectedSubplot, dataID, 
+        if (self.SelectedSubplotIndex is not None):
+            self.subplots[self.SelectedSubplotIndex-1] = Subplot(self.SelectedSubplotIndex, dataID, 
                                                             clusterID, plotType)
             self.draw()
         else:
-            wx.MessageDialog(self, 'Please select a subplot before plotting', 
-                             'Select Subplot', wx.OK|wx.ICON_ERROR)
+            self.addSubplot(dataID, clusterID, plotType)
             
-    
-    def setSelectedSubplot(self, plotNum):
+    @property
+    def SelectedSubplotIndex(self):
+        """Get/Set the user-selected subplot"""
+        if self._selectedSubplotIndex is not None:
+            return self._selectedSubplotIndex
+
+    @SelectedSubplotIndex.setter
+    def SelectedSubplotIndex(self, plotNum):
         if (plotNum > 0):
-            self.selectedSubplot = plotNum
+            self._selectedSubplotIndex = plotNum
             self.parent.setSelectedPlotStatus("Subplot "+str(plotNum)+" selected")
             self.parent.chkLinked.Value = self.CurrentSubplotLinked
         else:
             self.parent.setSelectedPlotStatus("")
             self.parent.chkLinked.Value = False
-            
-    def getSelectedSubplot(self):
-        return self.subplots[self.selectedSubplot-1]
-    
-    SelectedSubplot = property(getSelectedSubplot, setSelectedSubplot, doc="""Get/Set the user-selected subplot""")
-    
-    
-    def setCurrentSubplotDataSet(self, dataIndex, redraw=True):
+            self._selectedSubplotIndex = None
+                
+    @property
+    def CurrentSubplot(self):
         """
-        Assigns a particular data set to the currently selected subplot.
+        Retrieves the subplot instance of the currently selected subplot.
+        """
+        if self.SelectedSubplotIndex is not None:
+            if len(self.subplots) > 0:
+                return self.subplots[self.SelectedSubplotIndex-1]
+    
+    @CurrentSubplot.setter
+    def CurrentSubplot(self, subplot):
+        """
+        Sets the current subplot to a new Subplot instance
         
-        @type dataIndex: int
-        @param dataIndex: The index of the data set from the store this subplot represents
-        """
-        self.subplots[self.selectedSubplot-1].Data = dataIndex
-        self.subplots[self.selectedSubplot-1].drawFlag = redraw
-        self.draw()
-    
-    def setCurrentSubplotClustering(self, clusteringIndex, redraw=True):
-        """
-        Assigns a particular clustering to the currently selected subplot.
+        @type subplot: Subplot
+        @param subplot: A new Subplot instance
+        """      
+        if self.SelectedSubplotIndex is None:
+            self.SelectedSubplotIndex = len(self.subplots)
         
-        @type clusteringIndex: int
-        @param clusteringIndex: The index into the list of clusterings for the 
-            data set this subplot represents
-        """
-        self.subplots[self.selectedSubplot-1].Clustering = clusteringIndex
-        self.subplots[self.selectedSubplot-1].drawFlag = redraw
-        self.draw()
+        if len(self.subplots) > 0:
+            self.subplots[self.SelectedSubplotIndex-1] =  subplot
+        else:
+            self.subplots.append(subplot)
+            self.SelectedSubplotIndex = 1    
+
         
     def setCurrentSubplotLinked(self, linked):
         if len(self.subplots) > 0:
             if (not linked):
-                self.subplots[self.selectedSubplot-1].linkedDimensions = (self.XAxisColumn, self.YAxisColumn)
+                self.subplots[self.SelectedSubplotIndex-1].linkedDimensions = (self.XAxisColumn, self.YAxisColumn)
             else:
-                self.subplots[self.selectedSubplot-1].linkedDimensions = None
+                self.subplots[self.SelectedSubplotIndex-1].linkedDimensions = None
                 self.draw()
     
     def getCurrentSubplotLinked(self):
-        return self.subplots[self.selectedSubplot-1].linkedDimensions is None
+        return self.subplots[self.SelectedSubplotIndex-1].linkedDimensions is None
     
     CurrentSubplotLinked = property(getCurrentSubplotLinked, setCurrentSubplotLinked)
     
@@ -311,7 +319,7 @@ class FacsPlotPanel(PlotPanel):
         """
         Display the properties dialog for the current subplot.
         """
-        subplot = self.SelectedSubplot
+        subplot = self.CurrentSubplot
         try:
             dlg = pdialogs.getPlotOptionsDialog(self, subplot)
             if (dlg.ShowModal() == wx.ID_OK):
@@ -389,7 +397,6 @@ class FacsPlotPanel(PlotPanel):
             
 
 
-    # TODO: include plots in plugin system
     def drawSubplot(self, row, col, subplot):
         """
         Issue the commands necessary for drawing a subplot on the current 
