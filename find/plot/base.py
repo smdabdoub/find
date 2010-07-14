@@ -10,16 +10,11 @@ import display.validators as v
 import wx
 
 class OptionsDialog(wx.Dialog):
-    def __init__(self, parent, subplot, autoLoadOptions=False, title="Plot Options", size=(200,180)):
+    def __init__(self, parent, subplot, title="Plot Options", size=(200,180)):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, title, size=size)
         self.CenterOnParent()
         
         self.NB = wx.Notebook(self)
-
-        # Add tabs to the notebook
-        self.pnlRangeOpts = RangeOptionsPanel(self.NB)
-        if (autoLoadOptions):
-            self.loadOptions(subplot.opts)
         
         # sizer for layout
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -105,7 +100,7 @@ class RangeOptionsPanel(OptionsDialogPanel):
         self.Y_RANGE = wx.NewId()
                 
         # Init controls
-        self.txtX_RangeLow = wx.TextCtrl(self, size=(40,20), validator=v.FloatValidator(0, 'xRangeLow'))
+        self.txtX_RangeLow = wx.TextCtrl(self, size=(40,20))
         self.txtX_RangeHigh = wx.TextCtrl(self, size=(80,20))
         self.txtY_RangeLow = wx.TextCtrl(self, size=(40,20))
         self.txtY_RangeHigh = wx.TextCtrl(self, size=(80,20))
