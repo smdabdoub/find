@@ -91,7 +91,8 @@ class FCSreader(object):
         tmp = {}
         for t in text:
             if 'display' in t:
-                tmp[t] = str(text[t])
+                key = int(t.split('display')[0][1:])
+                tmp[key] = str(text[t])
         
         defXform = []
         for item in sorted(tmp.iteritems(), key=itemgetter(0)):
