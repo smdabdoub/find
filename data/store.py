@@ -72,10 +72,13 @@ class DataStore(object):
         @param index: The index of the FacsData instance to remove 
         """
         if (index in cls._facsData):
-            parent = cls._facsData[index].parent
-            # remove this data set from its parent's list of children
-            if parent is not None:
-                cls._facsData[parent].children.remove(index)
+            fd = cls._facsData[index]
+            # remove all children recursively
+            for childID in fd.children:
+                cls.remove(childID)
+            # clear the children ID list
+            del fd.children[:]
+            # finally, delete the item itself
             del cls._facsData[index]
     
     @classmethod
