@@ -101,6 +101,7 @@ def isolateClusters(selection, datasetName):
         # assign new data set to the store
         newFACSData = FacsData('', currFACSData.labels, newData, parent=currFACSData.ID)
         newFACSData.displayname = datasetName
+        newFACSData.selDims = currFACSData.selDims
         
         DataStore.add(newFACSData)
 
@@ -207,6 +208,7 @@ def separate(data, ids):
     @rtype: list
     @return: A list of array objects representing clusters.
     """
+    #TODO: unique1d is deprecated
     clustIDs = np.unique1d(ids)
     return [data[ids==id] for id in clustIDs]
 
