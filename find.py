@@ -303,7 +303,10 @@ class MainWindow(wx.Frame):
      
         # Add submenus to main menu
         for type_ in plugin.pluginTypes:
-            pluginsMenu.AppendSubMenu(submenus[type_], type_.capitalize())
+            if type_ == 'IO':
+                pluginsMenu.AppendSubMenu(submenus[type_], type_)
+            else:
+                pluginsMenu.AppendSubMenu(submenus[type_], type_.capitalize())
         
         return pluginsMenu
         
