@@ -58,7 +58,15 @@ class MainWindow(wx.Frame):
         wx.Frame.__init__(self, parent, wx.ID_ANY, title, size=(750,550))
         self.Center(direction=wx.HORIZONTAL)
 
-        self.setup()
+        try:
+            self.setup()
+        except error.PluginError as pe:
+            wx.MessageBox("The following error(s) occurred while loading the plugins directory:\n\n\t%s\n\nPlease fix the above problem(s) and restart FIND for plugins to work properly." % pe, 
+                          "Plugin Error", wx.OK | wx.ICON_ERROR)
+            loadPlugins = False
+        else:
+            loadPlugins = True    
+        
         self.dirname=''
         
         self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D)
@@ -112,7 +120,7 @@ class MainWindow(wx.Frame):
         # File menu
         fileMenu = wx.Menu()
         # Open file
-        fileMenu.Append(ID_OPEN, "Open File...\tCtrl+O"," Open a file to edit")
+        fileMenu.Append(ID_OPEN, "Open File(s)...\tCtrl+O"," Open a file to edit")
         self.Bind(wx.EVT_MENU, self.onOpen, id=ID_OPEN)
         # Save/Load system state
         fileMenu.Append(ID_SAVE_STATE, "Save project...\tCtrl+S","Save the state of the current analysis project.")
@@ -153,9 +161,6 @@ class MainWindow(wx.Frame):
         
         # Data menu
         self.dataMenu = wx.Menu()
-        self.dataMenu.Append(ID_DATA_ISOLATE, 'Isolate Clusters', 
-                               'Isolate one or more clusters as a separate data set under the parent')
-        self.Bind(wx.EVT_MENU, self.onIsolateClusters, id=ID_DATA_ISOLATE)
         self.dataMenu.Append(ID_DATA_RECOLOR, 'Recolor Clusters', 
                                'Match the cluster IDs between two clusters in order to sync their colors')
         self.Bind(wx.EVT_MENU, self.onRecolorClusters, id=ID_DATA_RECOLOR)
@@ -172,7 +177,8 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onAddSubplot, id=ID_PLOTS_ADD)
         
         # Plugin menu
-        self.pluginsMenu = self.generatePluginsMenu()
+        if loadPlugins:
+            self.pluginsMenu = self.generatePluginsMenu()
         
         # Help menu
         self.helpMenu = wx.Menu()
@@ -185,7 +191,8 @@ class MainWindow(wx.Frame):
         menuBar.Append(clusterMenu, "Cluster")
         menuBar.Append(self.dataMenu, "Data")
         menuBar.Append(self.plotsMenu, "Plots")
-        menuBar.Append(self.pluginsMenu, "Plugins")
+        if loadPlugins:
+            menuBar.Append(self.pluginsMenu, "Plugins")
         menuBar.Append(self.helpMenu, "&Help")
         self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
         
@@ -205,6 +212,8 @@ class MainWindow(wx.Frame):
         
         # Plugins
         plugin.importPlugins(plugin.discoverPlugins())
+            
+            
 
 
     def updateAxesList(self, labels, selectedAxes=(0,1)):
@@ -236,8 +245,13 @@ class MainWindow(wx.Frame):
                 except AttributeError:
                     continue
                 # Handle special cases for various types
-                # Clustering plugins
+                
+                #TODO: Implement Analysis plugins
+                # Analysis plugins
                 if type_ == plugin.pluginTypes[0]:
+                    continue
+                # Clustering plugins
+                elif type_ == plugin.pluginTypes[1]:
                     for method in pluginMethods:
                         cID = wx.NewId()
                         cmethod, cdialog = eval('module.'+method)()
@@ -249,23 +263,8 @@ class MainWindow(wx.Frame):
                         # Create the menu item
                         submenus[type_].Append(cID, name, descr)
                         self.Bind(wx.EVT_MENU, self.onCluster, id=cID)
-                #TODO: Implement Analysis plugins
-                # Analysis plugins
-                elif type_ == plugin.pluginTypes[1]:
-                    continue
-                
-                # Transforms plugins
-                elif type_ == plugin.pluginTypes[2]:
-                    pID = wx.NewId()
-                    tmethod, tscaleClass = eval('module.'+method)()
-                    doc = tmethod.__doc__.split(';')
-                    strID = doc[0].strip()
-                    name  = doc[1].strip()
-                    descr = doc[2].strip()
-                    tm.addPluginMethod((strID, pID, name, descr, tmethod, tscaleClass))
-                
                 # Plotting plugins
-                elif type_ == plugin.pluginTypes[3]:
+                elif type_ == plugin.pluginTypes[2]:
                     for method in pluginMethods:
                         pID = wx.NewId()
                         pmethod, pdialog, dtypes = eval('module.'+method)()
@@ -280,7 +279,7 @@ class MainWindow(wx.Frame):
                         item.Enable(False)
                         submenus[type_].AppendItem(item)
                 # I/O plugins
-                elif type_ == plugin.pluginTypes[4]:
+                elif type_ == plugin.pluginTypes[3]:
                     for method in pluginMethods:
                         name, cls = eval('module.'+method)()
                         ci = cls('')
@@ -291,8 +290,17 @@ class MainWindow(wx.Frame):
                         item = wx.MenuItem(submenus[type_], wx.ID_ANY, name, descr)
                         item.Enable(False)
                         submenus[type_].AppendItem(item)
+                # Transforms plugins
+                elif type_ == plugin.pluginTypes[4]:
+                    pID = wx.NewId()
+                    tmethod, tscaleClass = eval('module.'+method)()
+                    doc = tmethod.__doc__.split(';')
+                    strID = doc[0].strip()
+                    name  = doc[1].strip()
+                    descr = doc[2].strip()
+                    tm.addPluginMethod((strID, pID, name, descr, tmethod, tscaleClass))
                 
-        
+     
         # Add submenus to main menu
         for type_ in plugin.pluginTypes:
             pluginsMenu.AppendSubMenu(submenus[type_], type_.capitalize())
@@ -506,15 +514,19 @@ class MainWindow(wx.Frame):
                 fcs = DataStore.getCurrentDataSet()
                 data = fcs.data
                 # Remove columns from analysis as specified by the user
-                if fcs.selDims:
+                if len(fcs.selDims) > 0:
                     data = dh.filterData(data, fcs.selDims)
                 clusterIDs, msg = cMthds.cluster(event.GetId(), data, **dlg.getMethodArgs())
                 DataStore.addClustering(event.GetId(), clusterIDs, dlg.getMethodArgs())
                 clusteringIndex = DataStore.getCurrentDataSet().clustering.keys()[-1]
                 self.statusbar.SetStatusText(msg, 0)
                 if (dlg.isApplyChecked()):
-                    self.facsPlotPanel.setCurrentSubplotDataSet(DataStore.getCurrentIndex(), False)
-                    self.facsPlotPanel.setCurrentSubplotClustering(clusteringIndex)
+                    if self.facsPlotPanel.SelectedSubplotIndex is not None:
+                        self.facsPlotPanel.CurrentSubplot = dv.Subplot(self.facsPlotPanel.SelectedSubplotIndex, 
+                                                                       DataStore.getCurrentIndex(), clusteringIndex)
+                        self.facsPlotPanel.draw()
+                    else:
+                        self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex(), clusteringIndex)
                 self.treeCtrlPanel.updateTree()
         dlg.Destroy()
         
@@ -600,13 +612,13 @@ class MainWindow(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = "FIND: Flow Investigation using N-Dimensions"
         info.Version = "0.2"
-        info.Copyright = "(C) Shareef Dabdoub"
+        info.Copyright = "(C) Shareef M. Dabdoub"
         info.Description = wordwrap(
             "This application allows for the display, clustering, and general analysis of "
             "n-dimensional FACS data",
             500, wx.ClientDC(self.facsPlotPanel))
         info.WebSite = ("http://justicelab.org/find", "FIND Main Site")
-        info.Developers = ["Shareef Dabdoub"]
+        info.Developers = ["Shareef M. Dabdoub"]
         #info.License = wordwrap("Pay me one MILLLLLLLION dollars!!!", 500, wx.ClientDC(self.facsPlotPanel))
         # Show the wx.AboutBox
         wx.AboutBox(info)
