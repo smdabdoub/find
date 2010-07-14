@@ -1,5 +1,5 @@
 '''
-This module contains all user-defined exceptions for FWAC.
+This module contains all user-defined exceptions for FIND.
 '''
 import sys
 import urllib
@@ -7,6 +7,14 @@ import urllib2
 import wx
 
 NO_NETWORK_CONNECTIVITY = 1
+
+class PluginError(Exception):
+    def __init__(self, errMsg):
+        self.errMsg = errMsg
+    
+    def __str__(self):
+        return self.errMsg
+
 
 class UnknownFileType(Exception):
     def __init__(self, filename):
