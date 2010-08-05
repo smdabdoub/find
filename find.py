@@ -452,10 +452,13 @@ class MainWindow(wx.Frame):
                 dlg.Filename = dlg.Filename + '.find'
                 dlg.Path = dlg.Path + '.find'
             
-            selectedAxes = (self.facsPlotPanel.XAxisColumn, self.facsPlotPanel.YAxisColumn)
+            try:
+                selectedAxes = (self.facsPlotPanel.XAxisColumn, self.facsPlotPanel.YAxisColumn)
+            except AttributeError:
+                selectedAxes = (None, None)
             grid = (self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
             saveState(dlg.Directory, dlg.Filename, self.facsPlotPanel.subplots, 
-                      self.facsPlotPanel.selectedSubplot, selectedAxes, grid)
+                      self.facsPlotPanel.SelectedSubplotIndex, selectedAxes, grid)
             self.statusbar.SetStatusText("Project saved to %s" % dlg.Path, 0)
             
         dlg.Destroy()
@@ -480,7 +483,8 @@ class MainWindow(wx.Frame):
             self.facsPlotPanel.updateAxes(selectedAxes, False)
             self.facsPlotPanel.updateSubplotGrid(grid[0], grid[1], True)
             self.chkLinked.Value = self.facsPlotPanel.CurrentSubplotLinked
-            self.updateAxesList(DataStore.getCurrentDataSet().labels, selectedAxes)
+            labels = DataStore.getCurrentDataSet().labels if DataStore.getCurrentDataSet() is not None else []
+            self.updateAxesList(labels, selectedAxes)
             self.treeCtrlPanel.updateTree()
             self.statusbar.SetStatusText("Project loaded from %s" % dlg.Path, 0)
         
