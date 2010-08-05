@@ -213,7 +213,11 @@ def loadState(dir, filename):
     store = shelve.open(os.path.join(dir, filename))
     #store = dbopen(os.path.join(dir, filename))
     datakeys = store['data']
-    bindata = np.load(os.path.join(dir,store['binfile']))
+    
+    try:
+        bindata = np.load(os.path.join(dir,store['binfile']))
+    except IOError:
+        bindata = None
     
     # Parse data sets
     for dID in datakeys:
