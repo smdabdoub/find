@@ -310,7 +310,9 @@ class FacsPlotPanel(PlotPanel):
                 self.draw()
     
     def getCurrentSubplotLinked(self):
-        return self.subplots[self.SelectedSubplotIndex-1].linkedDimensions is None
+        if self.SelectedSubplotIndex is not None:
+            return self.subplots[self.SelectedSubplotIndex-1].linkedDimensions is None
+        return False
     
     CurrentSubplotLinked = property(getCurrentSubplotLinked, setCurrentSubplotLinked)
     
