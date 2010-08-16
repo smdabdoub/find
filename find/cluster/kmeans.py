@@ -116,8 +116,8 @@ class KMeansDialog(ClusterOptionsDialog):
             if dlg.ShowModal() == wx.ID_OK:
                 self.initialCenters = dlg.GetCenters()
             dlg.Destroy()
-        else:
-            super(KMeansDialog, self).cmdOK_click(event)
+        
+        super(KMeansDialog, self).cmdOK_click(event)
     
     
     def cmdHelp_Click(self, event):
@@ -147,9 +147,10 @@ class KMeansDialog(ClusterOptionsDialog):
         if not intVal.validate(self.txtNumPasses.Value):
             msg.append("Number of passes: A valid number must be entered.")
         else:
-            val = int(self.txtNumPasses.Value)
-            if val < 1:
-                msg.append("Number of passes: A value greater than 1 must be entered")
+            if not self.chkInitialCenters.IsChecked():
+                val = int(self.txtNumPasses.Value)
+                if val < 1:
+                    msg.append("Number of passes: A value greater than 1 must be entered")
                     
         return msg
     
