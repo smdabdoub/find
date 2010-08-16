@@ -6,7 +6,8 @@ Created on Mar 1, 2010
 import numpy as np
 from scipy.cluster.vq import whiten, vq, kmeans, kmeans2
 import Pycluster as pc
-
+#TODO: catch the following error and alert user
+# /Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/scipy/cluster/vq.py:570: UserWarning: One of the clusters is empty. Re-run kmean with a different initialization. 
 def kmeans(data, **kwargs):
     """
     Perform k-means clustering on unstructured N-dimensional data.
