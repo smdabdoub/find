@@ -380,7 +380,7 @@ class FacsPlotPanel(PlotPanel):
     def draw(self):
         """Draw all visible subplots"""            
         # Clear the figure canvas
-        self.canvas.figure.clf() 
+        self.canvas.figure.clear()
         # Draw each subplot
         if (len(self.subplots) > 0):
             subCount = 0
