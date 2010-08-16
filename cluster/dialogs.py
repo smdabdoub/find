@@ -81,7 +81,7 @@ class CenterChooserDialog(wx.Dialog):
         based on the selection made in the axis selection region of the main frame.
         """
         cbxSelected = self._GetSelectedAxes()
-        self.dataPanel.updateAxes(cbxSelected, True)
+        self.dataPanel.updateAxes(cbxSelected)
         
     
     def _GetSelectedAxes(self):
@@ -134,16 +134,18 @@ class CenterChooserPanel(PlotPanel):
         
         
     def draw(self):
+        self.figure.clear()
         # scatterplot data
         pmethods.getMethod(self.plot.plotType)(self.plot, self.figure, self.axes)
         
-        self.plot.axes.plot([500, 200], [500, 200],'+', ms=30, color='red')
         # draw centers
         try:
             c = np.asarray(self.centers)
-            self.plot.axes.plot(c[:, self.axes[0]], c[:, self.axes[0]],'o', ms=30, color='red')
+            self.plot.axes.plot(c[:, self.axes[0]], c[:, self.axes[1]],'o', ms=5, color='red')
         except IndexError:
             pass
+        
+        self.canvas.draw()
         
         
         
