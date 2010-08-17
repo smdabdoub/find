@@ -35,7 +35,7 @@ def histogram(subplot, figure, dims):
     data = subplot.Data[:, dims[0]]
     
     if opts['xTransform'] == 'log':
-        data = tm.getMethod('log')(data) 
+        data = tm.getMethod('log')(data)
 
     # Kernel density estimation
     if opts['type'] == 'Gaussian KDE' or opts['type'] == 'Both':
