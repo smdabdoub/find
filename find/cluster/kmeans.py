@@ -3,6 +3,8 @@ Created on Mar 1, 2010
 
 @author: shareef
 '''
+import transforms.methods as tm
+
 import numpy as np
 from scipy.cluster.vq import whiten, vq, kmeans, kmeans2
 import Pycluster as pc
@@ -48,13 +50,16 @@ def kmeans(data, **kwargs):
         smartCenters = kwargs['smartCenters']
     
     
-    logData = np.log10(np.clip(data, a_min=0.0001, a_max=np.max(np.maximum.reduce(data))))
-    if not initialCenters:
+    logData = tm.getMethod('log')(data)
+    if initialCenters is not None:
         (clusterIDs, err, nOpt) = pc.kcluster(logData, k, npass=npasses, method=method)
         msg = "Number of rounds optimal solution was found: %i" % nOpt
     else:
-        print "Using manually chosen centers:\n", initialCenters
-        (centroids, clusterIDs) = kmeans2(logData, np.array(initialCenters), minit='matrix')
+        logCenters = tm.getMethod('log')(np.array(initialCenters[:k]))
+        (centroids, clusterIDs) = kmeans2(logData, logCenters, minit='matrix')
+        if len(np.unique(clusterIDs)) < k:
+            wx.MessageBox('Warning: One or more of the returned clusters are empty. Please choose different initial cluster centers and re-run k-means for better results.', 'Insufficiently varied cluster centers', wx.OK | wx.ICON_WARNING)
+            
     
     return clusterIDs, msg
 
@@ -89,11 +94,11 @@ class KMeansDialog(ClusterOptionsDialog):
         
         # create a table of label-input controls
         self.formSizer = wx.GridSizer(4, 2, vgap=20) #rows,cols,vgap,hgap
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of clusters:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, wx.ID_ANY, 'Number of clusters:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtNumClusters, 1)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Center calculation:', (20, 5)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, wx.ID_ANY, 'Center calculation:', (20, 5)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.cbxMethod, 1, wx.EXPAND)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of passes:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, wx.ID_ANY, 'Number of passes:', (20, 10)), 1, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtNumPasses, 1)
         
         # create the button row
@@ -144,6 +149,9 @@ class KMeansDialog(ClusterOptionsDialog):
             val = int(self.txtNumClusters.Value)
             if val < 1 or val > MAX_CLUSTERS:
                 msg.append("Number of clusters: A value between 1 and %d must be entered." % MAX_CLUSTERS)
+            
+            if self.chkInitialCenters.IsChecked() and len(self.initialCenters) < val:
+                msg.append("The number of specified cluster centers is less than the number of desired clusters.")
         
         if not intVal.validate(self.txtNumPasses.Value):
             msg.append("Number of passes: A valid number must be entered.")
