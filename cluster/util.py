@@ -19,7 +19,8 @@ MAX_CLUSTERS = 15
 
 
 
-class ClusterOptionsDialog(wx.Dialog):
+from display.dialogs import ValidatedDialog
+class ClusterOptionsDialog(ValidatedDialog):
     """
     Provides a base options dialog to specify a consistent interface for
     retrieving data from clustering-related dialogs
@@ -47,29 +48,7 @@ class ClusterOptionsDialog(wx.Dialog):
             that are not easily understandable
         """
         pass
-    
-    def validate(self): 
-        """
-        Validates user input to the dialog.
-        
-        :@rtype: list
-        :@return: A list of strings, one for each validation error. Empty if no errors. 
-        """
-        pass
-    
-    def cmdOK_click(self, event):
-        """
-        Call the form validation method and display any error messages.
-        """
-        msg = self.validate()
-        if len(msg) > 0:
-            dlg = wx.MessageDialog(None, '\n'.join(msg), 
-                                   'Invalid input', wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
-        
-        event.Skip()
+
     
     def getApplySizer(self, parent):
         self.chkApplyToCurrentSuplot = wx.CheckBox(parent, wx.ID_ANY, 'Apply to current subplot')
