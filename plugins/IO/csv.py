@@ -3,6 +3,7 @@ This module provides the functionality to
 read and write CSV files from FACS data. 
 """
 from data.io import FILE_INPUT, FILE_OUTPUT
+from display.dialogs import ValidatedDialog
 from plugins.pluginbase import IOPlugin 
 
 from numpy import loadtxt
@@ -63,9 +64,12 @@ class CSVPlugin(IOPlugin):
         
         
         
+import display.formatters as f
 
-class CSVOptionsDialog(wx.Dialog):
-    def __init__(self):
+class CSVOptionsDialog(ValidatedDialog):
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'CSV File Import Options', size=(350, 300))
+        
         # form controls
         self.txtHeaderLine = wx.TextCtrl(self, wx.ID_ANY, '1', size=(50,20))
         self.txtCommentChar = wx.TextCtrl(self, wx.ID_ANY, '#', size=(50,20))
@@ -82,7 +86,7 @@ class CSVOptionsDialog(wx.Dialog):
         
         # create the button row
         self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL | wx.HELP)
-        self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, self.cmdOK_Click)
+        self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, super(CSVOptionsDialog, self).cmdOK_click)
         self.buttonSizer.HelpButton.Bind(wx.EVT_BUTTON, self.cmdHelp_Click)
         
         # main sizer
@@ -106,7 +110,15 @@ class CSVOptionsDialog(wx.Dialog):
 
 
     def validate(self):
-        return []
+        intVal = f.IntFormatter()
+        msg = []
+        
+        if not intVal.validate(self.txtHeaderLine.Value):
+            msg.append("Header line number: A valid number must be entered.")
+        elif int(self.txtHeaderLine.Value) <= 0:
+            msg.append("Header line number: Please enter a number larger than 0.")
+        
+        return msg
         
    
     #TODO: this should be generalized to a OptionsDialog class instead of just ClusterOptionsDialog
