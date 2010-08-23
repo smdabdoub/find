@@ -75,10 +75,8 @@ import wx
 
 class KMeansDialog(ClusterOptionsDialog):
     """
-    Provide an options dialog for the k-means clustering algorithm 
+    Provide an options dialog for the k-means clustering algorithm.
     """
-    
-    
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, 'k-means Options', size=(350, 300))
         self.CenterOnParent()
