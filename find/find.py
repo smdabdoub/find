@@ -5,17 +5,14 @@ import cluster.dialogs as cDlgs
 import cluster.methods as cMthds
 import plot.dialogs as pDlgs
 import plot.methods as pMthds
+
+from cluster.dialogs import ClusterInfoDialog, ClusterRecolorSelectionDialog
 import cluster.util as cUtil
-from display.dialogs import ClusterInfoDialog
-from display.dialogs import ClusterRecolorSelectionDialog
-from display.dialogs import DimensionExclusionDialog
-from display.dialogs import EditNameDialog
-from display.dialogs import FigureSetupDialog
-from display.dialogs import SampleDataDisplayDialog
 import data.handle as dh
 import data.view as dv
-from data.store import DataStore
-from data.store import FacsData
+import display.dialogs as displayDialogs
+import display.view as displayView
+from data.store import DataStore, FacsData
 from data import io
 import error
 import plugin
@@ -74,7 +71,7 @@ class MainWindow(wx.Frame):
         #self.splitter.SetBackgroundColour('white')
         self.rightPanel = wx.Panel(self.splitter)
         self.facsPlotPanel = dv.FacsPlotPanel(self.rightPanel)
-        self.treeCtrlPanel = dv.FacsTreeCtrlPanel(self.splitter)
+        self.treeCtrlPanel = displayView.FacsTreeCtrlPanel(self.splitter)
         
         # Partition the frame with sizers 
         self.dimensions = ['X axis', 'Y axis']
@@ -384,7 +381,7 @@ class MainWindow(wx.Frame):
                 # Give the user a brief preview of the data (10 rows) and allow
                 # column rearrangement and renaming
                 if (not allLabels):
-                    dgridDlg = SampleDataDisplayDialog(self, data[0:10,:], labels)
+                    dgridDlg = displayDialogs.SampleDataDisplayDialog(self, data[0:10,:], labels)
                     if (dgridDlg.ShowModal() == wx.ID_OK):
                         ca = dgridDlg.ColumnArrangement
                         lbls = dgridDlg.ColumnLabels
@@ -416,7 +413,7 @@ class MainWindow(wx.Frame):
                     
                 if (not allDims):
                     # Allow the user to choose columns for use in analysis
-                    dimDlg = DimensionExclusionDialog(self, labels)
+                    dimDlg = displayDialogs.DimensionExclusionDialog(self, labels)
                     dimDlg.Size=(dimDlg.Size[0]*.75, dimDlg.Size[1]*.8)
                     if (dimDlg.ShowModal() == wx.ID_OK):
                         DataStore.getCurrentDataSet().selDims = dimDlg.SelectedDimensions
@@ -551,7 +548,7 @@ class MainWindow(wx.Frame):
         
         
     def onSetupSubplots(self, event):
-        dlg = FigureSetupDialog(self, self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
+        dlg = displayDialogs.FigureSetupDialog(self, self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
         if dlg.ShowModal() == wx.ID_OK:
             self.facsPlotPanel.updateSubplotGrid(dlg.getRows(), dlg.getColumns())
         
@@ -584,7 +581,7 @@ class MainWindow(wx.Frame):
         dlg = ClusterInfoDialog(self, True)
         if dlg.ShowModal() == wx.ID_OK:
             selection = dlg.SelectedClusters()
-            nameDlg = EditNameDialog(self, '')
+            nameDlg = displayDialogs.EditNameDialog(self, '')
             if (nameDlg.ShowModal() == wx.ID_OK):
                 cUtil.isolateClusters(selection, nameDlg.Text)
             nameDlg.Destroy()
