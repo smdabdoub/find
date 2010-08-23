@@ -1,8 +1,6 @@
 
+import data.store as ds
 import plot.methods
-import data.store
-from data.store import DataStore
-from display.dialogs import ClusterInfoDialog
 
 import wx
 
@@ -16,9 +14,9 @@ class TreePopupMenu(wx.Menu):
         self.dataItem = True
         
         # Retrieve the appropriate plotting methods from the plot.methods module
-        dataPlots = ifilter(lambda item: data.store.ID_DATA_ITEM in item[-2], 
+        dataPlots = ifilter(lambda item: ds.ID_DATA_ITEM in item[-2], 
                             plot.methods.AvailableMethods().itervalues())
-        clusterPlots = ifilter(lambda item: data.store.ID_CLUSTERING_ITEM in item[-2], 
+        clusterPlots = ifilter(lambda item: ds.ID_CLUSTERING_ITEM in item[-2], 
                                plot.methods.AvailableMethods().itervalues())
         
         # Plot submenu
@@ -81,14 +79,15 @@ class TreePopupMenu(wx.Menu):
         if self.dataItem:
             self.parent.displayDataInfo()
         else:
-            dlg = ClusterInfoDialog(self.parent.TopLevelParent)
+            import cluster.dialogs as cd
+            dlg = cd.ClusterInfoDialog(self.parent.TopLevelParent)
             dlg.Show()
         
     def OnPlot(self, event):
         self.parent.plotData(event.GetId())
         
     def OnView(self, event):
-        DataStore.view()
+        ds.DataStore.view()
         
     def assignPlotMethods(self, methods, menu):
         """
