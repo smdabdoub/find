@@ -132,6 +132,15 @@ class DataStore(object):
         return cls._selectedIndex
     
     @classmethod
+    def getToplevelParent(cls, index):
+        parent = index
+        
+        while cls._facsData[parent].parent is not None:
+            parent =  cls._facsData[parent].parent
+            
+        return cls._facsData[parent]
+    
+    @classmethod
     def selectDataSet(cls, index):
         """
         Set the currently selected data set to that of the given index.
