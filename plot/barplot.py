@@ -8,6 +8,7 @@ from cluster.util import separate
 import methods
 
 import numpy.numarray as na
+from data.store import DataStore
 
 
 def barplot(subplot, figure, dims=None):
@@ -18,17 +19,21 @@ def barplot(subplot, figure, dims=None):
     Some techniques borrowed from:
     http://www.scipy.org/Cookbook/Matplotlib/BarCharts
     """
-    dataSize = len(subplot.Data)
-    clustering = separate(subplot.Data, subplot.Clustering)
-    percents = [float(len(cluster))/dataSize*100 for cluster in clustering]
-    numBars = len(percents)
-    width = 0.5
+    clusters = separate(subplot.Data, subplot.Clustering)
     
-    # set default plot options if necessary
+    # set default plot options
     opts = subplot.opts
     if len(opts) == 0:
-        opts['labelAngle'] = 0 if numBars < 5 else -20
+        opts['labelAngle'] = 0 if len(clusters) < 5 else -20
+        opts['toplevelPercent'] = False
     
+    dataSize = len(subplot.Data)
+    if opts['toplevelPercent']:
+        dataSize = len(DataStore.getToplevelParent(subplot.dataIndex).data)
+    
+    percents = [float(len(cluster))/dataSize*100 for cluster in clusters]
+    numBars = len(percents)
+    width = 0.5
     
     xlocs = na.array(range(len(percents)))+0.5
 
@@ -78,7 +83,8 @@ class BarplotOptionsPanel(OptionsDialogPanel):
         wx.Panel.__init__(self, parent)
 
         # Init controls
-        self.txtLabelAngle = wx.TextCtrl(self, size=(80,20))
+        self.txtLabelAngle = wx.TextCtrl(self, wx.ID_ANY, size=(80,20))
+        self.chkTopLevelPct = wx.CheckBox(self, wx.ID_ANY, 'Display percentages relative to top-level data')
 
         # Layout
         mainSizer = wx.BoxSizer()
@@ -87,7 +93,8 @@ class BarplotOptionsPanel(OptionsDialogPanel):
         
         # Sizer
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
-        self.Sizer.Add(mainSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
+        self.Sizer.Add(mainSizer, 0, wx.ALIGN_CENTER)
+        self.Sizer.Add(self.chkTopLevelPct, 0, wx.ALIGN_CENTER)
 
 
 
@@ -99,7 +106,8 @@ class BarplotOptionsPanel(OptionsDialogPanel):
         :@param opts: A dict of plot settings.
         """
         self.txtLabelAngle.Value = str(opts['labelAngle'])
-            
+        self.chkTopLevelPct.Value = opts['toplevelPercent']
+
     
     def validate(self):
         floatVal = f.FloatFormatter()
@@ -119,6 +127,7 @@ class BarplotOptionsPanel(OptionsDialogPanel):
     def Options(self):
         options = {}
         options['labelAngle'] = int(self.txtLabelAngle.Value)
+        options['toplevelPercent'] = self.chkTopLevelPct.Value
         return options
 
 
