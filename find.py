@@ -3,13 +3,12 @@ __all__ = ['MainWindow']
 # Local imports
 import cluster.dialogs as cDlgs
 import cluster.methods as cMthds
-import plot.dialogs as pDlgs
-import plot.methods as pMthds
-
-from cluster.dialogs import ClusterInfoDialog, ClusterRecolorSelectionDialog
 import cluster.util as cUtil
 import data.handle as dh
 import data.view as dv
+import plot.dialogs as pDlgs
+import plot.methods as pMthds
+
 import display.dialogs as displayDialogs
 import display.view as displayView
 from data.store import DataStore, FacsData
@@ -578,7 +577,7 @@ class MainWindow(wx.Frame):
         Note: If either dialog box spawned by this method are canceled, 
               the entire process is canceled. 
         """
-        dlg = ClusterInfoDialog(self, True)
+        dlg = cDlgs.ClusterInfoDialog(self, True)
         if dlg.ShowModal() == wx.ID_OK:
             selection = dlg.SelectedClusters()
             nameDlg = displayDialogs.EditNameDialog(self, '')
@@ -597,7 +596,7 @@ class MainWindow(wx.Frame):
         Display a dialog that allows the user to select two clusterings, and
         rearrange their order to reflect cluster similarity.
         """
-        dlg = ClusterRecolorSelectionDialog(self)
+        dlg = cDlgs.ClusterRecolorSelectionDialog(self)
         if dlg.ShowModal() == wx.ID_OK:
             src = dlg.Source
             dst = dlg.Destination
