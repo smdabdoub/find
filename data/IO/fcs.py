@@ -21,16 +21,17 @@ class FCSreader(object):
     """
     Read and parse standard FCS3.0 format files.
     """
-    def __init__(self, filename):
+    def __init__(self, filename=None, fcData=None, window=None):
         self.filename = filename
         self._fh = None
         self.cur_offset = 0
-        
+    
     def register(self):
         from ..io import FILE_INPUT
         return {FILE_INPUT: self.get_FCMdata}
     
-    def fileType(self):
+    @property
+    def FileType(self):
         return 'Binary FCS 3.0 (*.fcs)|*.fcs'
        
     def get_FCMdata(self):
