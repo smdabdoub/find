@@ -14,9 +14,8 @@ FILE_OUTPUT = False
 
 methods = {}
 methods['fcs'] = ('fcs', wx.NewId(), fcs.FCSreader, False)
-#methods['csv'] = ('csv', loadCSV, FILE_INPUT, 'Comma Separated Values (*.csv)|*.csv', False)
 
-def loadDataFile(filename):
+def loadDataFile(filename, window=None):
     """
     Loads the given file by choosing the appropriate loading method, 
     and returns a tuple containing the column labels and the data matrix.
@@ -29,14 +28,14 @@ def loadDataFile(filename):
     fileType = filename.split('.')[-1]
     
     if (fileType in methods):
-        c = methods[fileType][2](filename)
+        c = methods[fileType][2](filename, window=window)
         return c.register()[FILE_INPUT]()
     
     raise UnknownFileType(filename)
 
 
 #TODO: implement
-def exportDataFile(eID, facs):
+def exportDataFile(eID, filename, fcData, window=None):
     """
     Passes the given FacsData instance to the specified IO class.
     
@@ -45,7 +44,8 @@ def exportDataFile(eID, facs):
     :@type facs: data.store.FacsData
     :@param facs: The FacsData instance that will be handed to the IO method.
     """
-    pass
+    c = getMethod(eID)(filename, fcData, window=window)
+    c.register()[FILE_OUTPUT]()
 
 
 def addPluginMethod(descriptor):
@@ -57,6 +57,7 @@ def addPluginMethod(descriptor):
     """
     global methods
     methods[descriptor[0]] = descriptor
+    
     
 def AvailableMethods():
     """
@@ -71,6 +72,7 @@ def AvailableMethods():
         - plugin flag
     """
     return methods
+
 
 def getMethod(id):
     """
