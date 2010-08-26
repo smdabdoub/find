@@ -62,6 +62,11 @@ class MainWindow(wx.Frame):
             loadPlugins = False
         else:
             loadPlugins = True    
+            
+        
+        # Plugin menu
+        if loadPlugins:
+            self.pluginsMenu = self.generatePluginsMenu()
         
         self.dirname=''
         
@@ -104,12 +109,10 @@ class MainWindow(wx.Frame):
         self.splitter.SetMinimumPaneSize(20)
         self.splitter.SplitVertically(self.treeCtrlPanel, self.rightPanel, 150)
         
-        
         # Set up status bar
         self.statusbar = self.CreateStatusBar(2)
         self.statusbar.SetStatusWidths([-1,200])
         self.statusbar.SetStatusStyles([wx.SB_NORMAL, wx.SB_RAISED])
-        
         
         ## MENU SETUP ##
         
@@ -128,11 +131,12 @@ class MainWindow(wx.Frame):
         # gather all the IO classes capable of output
         for entry in io.AvailableMethods().values():
             # instantiate the IO class
-            c = entry[2]('')
+            c = entry[2]()
             if io.FILE_OUTPUT in c.register():
-                help = '' if c.__doc__ is None else c.__doc__.strip().split('\n')[0]
+                doc = c.register()[io.FILE_OUTPUT].__doc__
+                help = '' if doc is None else doc.strip().split('\n')[0]
                 exportMenu.Append(entry[1], entry[0], help)
-                self.Bind(wx.EVT_MENU, self.onExport, id=entry[1])
+                self.Bind(wx.EVT_MENU, self.OnExport, id=entry[1])
         fileMenu.AppendSubMenu(exportMenu, 'Export...', 'Save data and/or clustering items')
         
         # Raise error
@@ -172,9 +176,7 @@ class MainWindow(wx.Frame):
         self.plotsMenu.Append(ID_PLOTS_ADD, "Add Subplot", " Add a subplot to the current figure")
         self.Bind(wx.EVT_MENU, self.onAddSubplot, id=ID_PLOTS_ADD)
         
-        # Plugin menu
-        if loadPlugins:
-            self.pluginsMenu = self.generatePluginsMenu()
+        
         
         # Help menu
         self.helpMenu = wx.Menu()
@@ -343,12 +345,10 @@ class MainWindow(wx.Frame):
     def onOpen(self, event):
         """
         Opens a FACS data file, parses it, and updates the FacsPlotPanel instance.
-        
-        @see: L{data.handle.loadFacsCSV} for details on what types of files can be loaded
         """
         # retrieve the I/O methods for inputting files
-        inputMethods = [m[2]('') for m in io.AvailableMethods().values()]
-        formats = '|'.join([m.fileType() for m in inputMethods if io.FILE_INPUT in m.register()])
+        inputMethods = [m[2]() for m in io.AvailableMethods().values()]
+        formats = '|'.join([m.FileType for m in inputMethods if io.FILE_INPUT in m.register()])
         allLabels = []
         allColArr = []
         allDims   = []
@@ -360,13 +360,14 @@ class MainWindow(wx.Frame):
         if numDims is not None:
             numDims = len(numDims.labels)
         
-        dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", formats, wx.FD_OPEN|wx.FD_MULTIPLE)
+        dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", formats, 
+                            wx.FD_OPEN|wx.FD_MULTIPLE|wx.FD_CHANGE_DIR)
         if dlg.ShowModal() == wx.ID_OK:
             #TODO: move to data.io module
             # process each file selected
             for n, path in enumerate(dlg.Paths):
                 self.statusbar.SetStatusText('loading: ' + path, 0)
-                (labels, data, annotations) = io.loadDataFile(path)
+                (labels, data, annotations) = io.loadDataFile(path, window=self)
                 
                 # make sure the new file matches dimensions of loaded files
                 if numDims is None:
@@ -435,9 +436,20 @@ class MainWindow(wx.Frame):
             
         dlg.Destroy()
         
-    def onExport(self, event):
-        event.GetId()
+    def OnExport(self, event):
+        if DataStore.getCurrentIndex() is None:
+            wx.MessageBox("Please load a dataset before attempting to export",
+                          "Data Missing", wx.OK | wx.ICON_ERROR)
+            return
         
+        format = io.getMethod(event.GetId())().FileType
+        dlg = wx.FileDialog(self, "Save File", "", "", 
+                            format, 
+                            wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT|wx.FD_CHANGE_DIR)
+        if dlg.ShowModal() == wx.ID_OK:
+            io.exportDataFile(event.GetId(), dlg.Path, DataStore.getCurrentDataSet(), window=self)
+        
+        dlg.Destroy()
     
     def OnSaveState(self, event):
         from data.io import saveState
