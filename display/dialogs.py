@@ -204,16 +204,21 @@ class FigureSetupDialog(wx.Dialog):
 
 class DataInfoDialog(wx.Dialog):
     """
-    This class displays (for now) the header information embedded in 
-    FCS 3.0 files.
+    This class displays basic information for data sets, and embedded header 
+    information for FCS 3.0 files.
     """
     def __init__(self, parent, data):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Data Information', 
                            style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
-        self.CenterOnParent()
+        self.CenterOnParent() 
+        
         textAnn = [('file name',data.filename)]
         textAnn.append(('display name', data.displayname))
         textAnn.append(('selected dimensions', ', '.join([data.labels[i] for i in data.selDims])))
+        
+        if data.filename == '' or 'tot' not in data.annotations['text']:
+            textAnn.append(('events', len(data.data)))
+        
         if 'text' in data.annotations:
             textAnn.extend(sorted(data.annotations['text'].iteritems()))
         
