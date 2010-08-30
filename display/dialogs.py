@@ -212,12 +212,9 @@ class DataInfoDialog(wx.Dialog):
                            style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(280, 500))
         self.CenterOnParent() 
         
-        textAnn = [('file name',data.filename)]
+        textAnn = []
         textAnn.append(('display name', data.displayname))
         textAnn.append(('selected dimensions', ', '.join([data.labels[i] for i in data.selDims])))
-        
-        if data.filename == '' or 'tot' not in data.annotations['text']:
-            textAnn.append(('events', len(data.data)))
         
         if 'text' in data.annotations:
             textAnn.extend(sorted(data.annotations['text'].iteritems()))
