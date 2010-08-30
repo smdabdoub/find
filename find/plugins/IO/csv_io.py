@@ -58,7 +58,12 @@ class CSVPlugin(IOPlugin):
         # load actual data
         print 'loadtxt(%s, comments=%s, delimiter=%s, skiprows=%i)' % (self.filename, commentChar, delim, skiprows)
         data = loadtxt(self.filename, comments=commentChar, delimiter=delim, skiprows=skiprows)
-        return (labels,data, {})
+        
+        # text annotations
+        textAnn = {'file name': self.filename}
+        textAnn['events'] = len(data)
+        
+        return (labels, data, {'text': textAnn})
     
     def save(self):
         """
