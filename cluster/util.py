@@ -71,18 +71,23 @@ def isolateClusters(selection, datasetName):
     @var datasetName: The display name for the new data set.
     """
     if (len(selection) > 0):
-        currFACSData = DataStore.getCurrentDataSet()
+        currFCData = DataStore.getCurrentDataSet()
         if (datasetName == ""):
-            datasetName = currFACSData.displayname
-        clusters = separate(currFACSData.data, currFACSData.getCurrentClustering())
+            datasetName = currFCData.displayname
+        clusters = separate(currFCData.data, currFCData.getCurrentClustering())
         # merge selected clusters
         newData = dh.mergeData(selection, clusters)
         # assign new data set to the store
-        newFACSData = FacsData('', currFACSData.labels, newData, parent=currFACSData.ID)
-        newFACSData.displayname = datasetName
-        newFACSData.selDims = currFACSData.selDims
+        newFCData = FacsData('', currFCData.labels, newData, parent=currFCData.ID)
+        newFCData.displayname = datasetName
+        newFCData.selDims = currFCData.selDims
         
-        DataStore.add(newFACSData)
+        # add basic text annotations
+        textAnn = {'parent': currFCData.displayname}
+        textAnn['events'] = len(newFCData.data)
+        newFCData.annotations['text'] = textAnn
+        
+        DataStore.add(newFCData)
 
 
 import scipy.spatial.distance as ssd
