@@ -87,13 +87,13 @@ class MainWindow(wx.Frame):
         
         self.chkLinked = wx.CheckBox(self.rightPanel, ID_LINKED, "Linked")
         self.selectorSizer.Add(self.chkLinked,0, wx.ALIGN_RIGHT)
-        self.Bind(wx.EVT_CHECKBOX, self.onLinkedClick, id=ID_LINKED)
+        self.Bind(wx.EVT_CHECKBOX, self.OnLinkedClick, id=ID_LINKED)
 
         for i in range(len(self.dimensions)):
             self.dataSelectors.append(wx.ComboBox(self.rightPanel, ID_CBX+i, "", (-1,-1), (160, -1), [], wx.CB_READONLY))
             self.selectorSizer.AddGrowableCol(i) # so dim selectors take up most space
             self.selectorSizer.Add(self.dataSelectors[i], 1, wx.ALIGN_CENTER | wx.RIGHT, 10)
-            self.Bind(wx.EVT_COMBOBOX, self.onCBXClick, id=ID_CBX+i)
+            self.Bind(wx.EVT_COMBOBOX, self.OnCBXClick, id=ID_CBX+i)
             
         
         # Window layout
@@ -120,7 +120,7 @@ class MainWindow(wx.Frame):
         fileMenu = wx.Menu()
         # Open file
         fileMenu.Append(ID_OPEN, "Open File(s)...\tCtrl+O"," Open a file to edit")
-        self.Bind(wx.EVT_MENU, self.onOpen, id=ID_OPEN)
+        self.Bind(wx.EVT_MENU, self.OnOpen, id=ID_OPEN)
         # Save/Load system state
         fileMenu.Append(ID_SAVE_STATE, "Save project...\tCtrl+S","Save the state of the current analysis project.")
         self.Bind(wx.EVT_MENU, self.OnSaveState, id=ID_SAVE_STATE)
@@ -145,8 +145,8 @@ class MainWindow(wx.Frame):
 #        self.Bind(wx.EVT_MENU, self.OnRaiseError, id=error.GetId())
         # Exit
         item = fileMenu.Append(wx.ID_EXIT,"E&xit"," Terminate the program")
-        self.Bind(wx.EVT_MENU, self.onMenuExit, item)
-        self.Bind(wx.EVT_CLOSE, self.onExit)
+        self.Bind(wx.EVT_MENU, self.OnMenuExit, item)
+        self.Bind(wx.EVT_CLOSE, self.OnExit)
         
         # Cluster menu
         # Populate from methods available from the imported cluster methods class
@@ -157,31 +157,31 @@ class MainWindow(wx.Frame):
             # indicates this method is a plugin
             if (not info[4]):
                 clusterMenu.Append(info[0], info[1], info[2])
-                self.Bind(wx.EVT_MENU, self.onCluster, id=info[0])
+                self.Bind(wx.EVT_MENU, self.OnCluster, id=info[0])
         
         # Data menu
         self.dataMenu = wx.Menu()
         self.dataMenu.Append(ID_DATA_RECOLOR, 'Recolor Clusters', 
                                'Match the cluster IDs between two clusters in order to sync their colors')
-        self.Bind(wx.EVT_MENU, self.onRecolorClusters, id=ID_DATA_RECOLOR)
+        self.Bind(wx.EVT_MENU, self.OnRecolorClusters, id=ID_DATA_RECOLOR)
 
         # Plots menu
         self.plotsMenu = wx.Menu()
         self.plotsMenu.Append(ID_PLOTS_SETUP, "Setup", 
                          " Indicate how the figure should be arranged in terms of subplots")
-        self.Bind(wx.EVT_MENU, self.onSetupSubplots, id=ID_PLOTS_SETUP)
+        self.Bind(wx.EVT_MENU, self.OnSetupSubplots, id=ID_PLOTS_SETUP)
         self.plotsMenu.Append(ID_PLOTS_SAVE, "Save Figure", 
                          " Export the figure as an image")
-        self.Bind(wx.EVT_MENU, self.onSaveFigure, id=ID_PLOTS_SAVE)
+        self.Bind(wx.EVT_MENU, self.OnSaveFigure, id=ID_PLOTS_SAVE)
         self.plotsMenu.Append(ID_PLOTS_ADD, "Add Subplot", " Add a subplot to the current figure")
-        self.Bind(wx.EVT_MENU, self.onAddSubplot, id=ID_PLOTS_ADD)
+        self.Bind(wx.EVT_MENU, self.OnAddSubplot, id=ID_PLOTS_ADD)
         
         
         
         # Help menu
         self.helpMenu = wx.Menu()
         self.helpMenu.Append(wx.ID_ABOUT, "&About FIND"," Information about this program")
-        self.Bind(wx.EVT_MENU, self.onAbout, id=wx.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         
         # Creating the menubar.
         menuBar = wx.MenuBar()
@@ -260,7 +260,7 @@ class MainWindow(wx.Frame):
                         cDlgs.addPluginDialog(cID, cdialog)
                         # Create the menu item
                         submenus[type_].Append(cID, name, descr)
-                        self.Bind(wx.EVT_MENU, self.onCluster, id=cID)
+                        self.Bind(wx.EVT_MENU, self.OnCluster, id=cID)
                 # Plotting plugins
                 elif type_ == plugin.pluginTypes[2]:
                     for method in pluginMethods:
@@ -314,7 +314,7 @@ class MainWindow(wx.Frame):
         raise Exception("Test exception raised") 
     
     # FRAME CONTROLS    
-    def onCBXClick(self, event):
+    def OnCBXClick(self, event):
         """ 
         Instructs the FacsPlotPanel instance to update the displayed axis 
         based on the selection made in the axis selection region of the main frame.
@@ -322,27 +322,27 @@ class MainWindow(wx.Frame):
         cbxSelected = [self.dataSelectors[i].GetSelection() for i in range(len(self.dataSelectors))]
         self.facsPlotPanel.updateAxes(cbxSelected, True)
 
-    def onLinkedClick(self, event):
+    def OnLinkedClick(self, event):
         """
         Sets whether the currently selected subplot will respond to the dimension selector
         """
         self.facsPlotPanel.setCurrentSubplotLinked(self.chkLinked.Value)
         
-    def onExit(self, event):
+    def OnExit(self, event):
         self.treeCtrlPanel.Destroy()
         self.Destroy()
 
     # MENU ITEMS
     
     # File Menu
-    def onMenuExit(self, event):
+    def OnMenuExit(self, event):
         """
         Handles window exit event
         """
         self.Close(True)
         
     
-    def onOpen(self, event):
+    def OnOpen(self, event):
         """
         Opens a FACS data file, parses it, and updates the FacsPlotPanel instance.
         """
@@ -363,11 +363,16 @@ class MainWindow(wx.Frame):
         dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", formats, 
                             wx.FD_OPEN|wx.FD_MULTIPLE|wx.FD_CHANGE_DIR)
         if dlg.ShowModal() == wx.ID_OK:
-            #TODO: move to data.io module
+            #TODO: move to data.io module?
             # process each file selected
             for n, path in enumerate(dlg.Paths):
                 self.statusbar.SetStatusText('loading: ' + path, 0)
-                (labels, data, annotations) = io.loadDataFile(path, window=self)
+                try:
+                    (labels, data, annotations) = io.loadDataFile(path, window=self)
+                except TypeError:
+                    # if there was an error loading the file, 
+                    # loadDataFile should return None, so skip this file
+                    continue
                 
                 # make sure the new file matches dimensions of loaded files
                 if numDims is None:
@@ -499,7 +504,7 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
             
         
-    
+    #TODO: Remove this
     def OnExportClustering(self, event):
         dlg = wx.FileDialog(self, "Export selected clustering to file", "", "", "*.clst", wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
@@ -512,7 +517,7 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
     
     # Cluster Menu
-    def onCluster(self, event):
+    def OnCluster(self, event):
         """
         Handles all clustering requests.
         
@@ -546,26 +551,30 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
         
     # Plots Menu
-    def onAddSubplot(self, event):
+    def OnAddSubplot(self, event):
         """
         Instructs the FacsPlotPanel instance to add a subplot to the figure.
         """
+        cds = DataStore.getCurrentDataSet()
+        if cds is None:
+            return
+        
         try:
-            clusteringIndex = DataStore.getCurrentDataSet().clustering.keys()[-1]
+            clusteringIndex = cds.clustering.keys()[-1]
         except IndexError:
             self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex())
         else:
             self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex(), clusteringIndex)
         
         
-    def onSetupSubplots(self, event):
+    def OnSetupSubplots(self, event):
         dlg = displayDialogs.FigureSetupDialog(self, self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
         if dlg.ShowModal() == wx.ID_OK:
             self.facsPlotPanel.updateSubplotGrid(dlg.getRows(), dlg.getColumns())
         
         dlg.Destroy()
             
-    def onSaveFigure(self, event):
+    def OnSaveFigure(self, event):
         formats = "PNG (*.png)|*.png|PDF (*.pdf)|*.pdf|PostScript (*.ps)|*.ps|EPS (*.eps)|*.eps|SVG (*.svg)|*.svg"
         fmts = ['png', 'pdf', 'ps', 'eps', 'svg']
         dlg = wx.FileDialog(self, "Save Figure", self.dirname, "", formats, wx.FD_SAVE)
@@ -582,7 +591,7 @@ class MainWindow(wx.Frame):
     # Data Menu
     
     #TODO: consider moving this to a more accessible location
-    def onIsolateClusters(self, event):
+    def OnIsolateClusters(self, event):
         """
         Handles menu requests to create a new dataset from a selection of 
         one or more clusters from an existing, clustered dataset.
@@ -603,7 +612,7 @@ class MainWindow(wx.Frame):
     
     
     
-    def onRecolorClusters(self, event):
+    def OnRecolorClusters(self, event):
         """
         Display a dialog that allows the user to select two clusterings, and
         rearrange their order to reflect cluster similarity.
@@ -620,7 +629,7 @@ class MainWindow(wx.Frame):
             
         
     # Help Menu
-    def onAbout(self, event):
+    def OnAbout(self, event):
         """
         Displays a simple About dialog.
         """
