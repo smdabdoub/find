@@ -48,22 +48,35 @@ class CSVPlugin(IOPlugin):
             delim = dlg.Delimiter
             skiprows = dlg.HeaderLineNumber
             commentChar = dlg.CommentCharacter
-        dlg.Destroy()
+            dlg.Destroy()            
         
-        # Retrieve first line of column labels
-        facsFile = open(self.filename,'r')
-        labels = facsFile.readline().rstrip().replace('"','').split(',')
-        facsFile.close()
+            # Retrieve first line of column labels
+            with open(self.filename,'r') as fcFile:
+                for i, line in enumerate(fcFile):
+                    if i < skiprows:
+                        labels = line
+                    else:
+                        break
+                labels = labels.rstrip().replace('"','').replace("'",'').split(delim)
+            
+            # load actual data
+            try:
+                data = loadtxt(self.filename, comments=commentChar, delimiter=delim, skiprows=skiprows)
+            except Exception:
+                wx.MessageBox("Please ensure there are no missing values and that correct values for the CSV options were specified.",
+                              "Data Loading Error", wx.OK | wx.ICON_ERROR)
+                return
+            
+            # text annotations
+            textAnn = {'file name': self.filename}
+            textAnn['events'] = len(data)
+            
+            return (labels, data, {'text': textAnn})
         
-        # load actual data
-        print 'loadtxt(%s, comments=%s, delimiter=%s, skiprows=%i)' % (self.filename, commentChar, delim, skiprows)
-        data = loadtxt(self.filename, comments=commentChar, delimiter=delim, skiprows=skiprows)
-        
-        # text annotations
-        textAnn = {'file name': self.filename}
-        textAnn['events'] = len(data)
-        
-        return (labels, data, {'text': textAnn})
+        else:
+            dlg.Destroy() 
+
+
     
     def save(self):
         """
@@ -130,28 +143,11 @@ class CSVOptionsDialog(ValidatedDialog):
             msg.append("Header line number: Please enter a number larger than 0.")
         
         return msg
-        
-   
-    #TODO: this should be generalized to a OptionsDialog class instead of just ClusterOptionsDialog
-    def cmdOK_click(self, event):
-        """
-        Call the form validation method and display any error messages.
-        """
-        msg = self.validate()
-        if len(msg) > 0:
-            dlg = wx.MessageDialog(None, '\n'.join(msg), 
-                                   'Invalid input', wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
-        
-        event.Skip()
     
     
     def cmdHelp_Click(self, event):
-        pass
-#        from display.help import HelpDialog
-#        HelpDialog(self, "k-means help", htmlfile="help/k-means_clustering.html").Show()
+        from display.help import HelpDialog
+        HelpDialog(self, "CSV Import Help", htmlfile="help/csv_import.html", size=(300,200)).Show()
 
 
 def register_csv():
