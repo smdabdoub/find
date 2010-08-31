@@ -80,6 +80,12 @@ class DataStore(object):
             del fd.children[:]
             # finally, delete the item itself
             del cls._facsData[index]
+        
+        if len(cls._facsData) > 0:
+            cls._selectedIndex = cls._facsData.keys()[0]
+        else:
+            cls._selectedIndex = None
+            
     
     @classmethod
     def removeAll(cls):
