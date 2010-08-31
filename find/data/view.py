@@ -370,7 +370,7 @@ class FacsPlotPanel(PlotPanel):
     
     #TODO: finish the selective redrawing
     def draw(self):
-        """Draw all visible subplots"""            
+        """Draw all visible subplots"""
         # Clear the figure canvas
         self.canvas.figure.clear()
         # Draw each subplot
@@ -442,7 +442,7 @@ class Subplot(object):
         self.plotType = plotType
         self.opts = {}
         self.axes = None
-        self.mnp = None
+        self.mnp = None  #TODO: switch to allow 1,1,1 format for alt method in maplotlib
         self._title = ''
         self.linkedDimensions = None
         self.drawFlag = True
