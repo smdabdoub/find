@@ -5,6 +5,8 @@ This module contains all dialog classes necessary for non data-related menu item
 @organization: The Ohio State University
 @organization: Nationwide Children's Hospital  
 """
+import formatters as f
+
 import math
 import wx
 
@@ -163,13 +165,13 @@ class DimensionExclusionDialog(wx.Dialog):
         
 
 #TODO: validate input
-class FigureSetupDialog(wx.Dialog):
+class FigureSetupDialog(ValidatedDialog):
     """
     This dialog allows the user to specify the grid for subplots on the main figure.
     """
     
     def __init__(self, parent, rows=1, cols=1):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(230, 150))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(200, 150))
         self.CenterOnParent()
         
         # create form controls
@@ -179,13 +181,14 @@ class FigureSetupDialog(wx.Dialog):
         # create a table of label-input controls
         self.formSizer = wx.FlexGridSizer(3, 2, hgap=10)
         self.formSizer.SetFlexibleDirection(wx.HORIZONTAL)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of rows:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Rows:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtRows, 1)
-        self.formSizer.Add(wx.StaticText(self, -1, 'Number of columns:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
+        self.formSizer.Add(wx.StaticText(self, -1, 'Columns:'), 0, wx.EXPAND | wx.ALIGN_RIGHT)
         self.formSizer.Add(self.txtColumns, 1)
         
         # create the button row
         self.buttonSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL)
+        self.buttonSizer.AffirmativeButton.Bind(wx.EVT_BUTTON, super(FigureSetupDialog, self).cmdOK_click)
         
         # main sizer
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -199,6 +202,22 @@ class FigureSetupDialog(wx.Dialog):
     
     def getColumns(self):
         return int(self.txtColumns.GetValue())
+    
+    def validate(self):
+        intVal = f.IntFormatter()
+        msg = []
+        
+        if not intVal.validate(self.txtRows.Value):
+            msg.append("Rows: A valid number must be entered.")
+        elif int(self.txtRows.Value) < 1 or int(self.txtRows.Value) > 9:
+            msg.append("Rows: Enter a value between 1 and 9.")
+        
+        if not intVal.validate(self.txtColumns.Value):
+            msg.append("Columns: A valid number must be entered.")
+        elif int(self.txtColumns.Value) < 1 or int(self.txtColumns.Value) > 9:
+            msg.append("Columns: Enter a value between 1 and 9.")
+        
+        return msg
         
 
 
