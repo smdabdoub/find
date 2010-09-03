@@ -1,13 +1,12 @@
 """
 Provide access to data stored in FCS files
 
-Input method taken from the py-fcm project at:
+Reader source from the py-fcm project at:
 https://code.google.com/p/py-fcm/source/browse/src/io/readfcs.py
 
-This version of the reader is from the 9/02/2009 revision
+This version of the reader is from the 07/14/2010 revision
 """
 from error import UnimplementedFcsDataMode
-
 
 from operator import and_, itemgetter
 from math import log
@@ -15,7 +14,6 @@ from struct import calcsize, unpack
 import re
 import numpy
 import os
-import sys
 
 
 
@@ -23,10 +21,14 @@ class FCSreader(object):
     """
     Read and parse standard FCS3.0 format files.
     """
-    def __init__(self, filename=None, fcData=None, window=None):
+    def __init__(self, filename=None, fcData=None, window=None, auto_logicle = True, sidx = None, spill=None):
         self.filename = filename
+        self.logicle = auto_logicle
+        #self._fh = cStringIO.StringIO(open(filename, 'rb').read())
         self._fh = None
         self.cur_offset = 0
+        self.spill = spill
+        self.sidx = sidx
     
     def register(self):
         from ..io import FILE_INPUT
@@ -36,14 +38,17 @@ class FCSreader(object):
     def FileType(self):
         return 'Binary FCS 3.0 (*.fcs)|*.fcs'
        
-    def get_FCMdata(self):
+    def get_FCMdata(self, auto_comp=True):
         """Return the next FCM data set stored in a FCS file"""
         self._fh = open(self.filename, 'rb')
+       
         # parse headers
         header = self.parse_header(self.cur_offset)
+       
         # parse text
         text = self.parse_text(self.cur_offset, header['text_start'], header['text_stop'])
-        # parse analysis
+       
+        # parse annalysis
         try:
             astart = text['beginanalysis']
         except KeyError:
@@ -55,7 +60,7 @@ class FCSreader(object):
         analysis = self.parse_analysis(self.cur_offset, astart, astop)
         # parse data
         try:
-            dstart = int(text['beginadata'])
+            dstart = int(text['begindata'])
         except KeyError:
             dstart = header['data_start']
         try:
@@ -63,6 +68,9 @@ class FCSreader(object):
         except KeyError:
             dstop = header['data_end']
        
+        #account for LMD reporting the wrong values for the size of the data segment
+        lmd = self.fix_lmd(self.cur_offset,header['text_start'], header['text_stop'] )
+        dstop = dstop+lmd
         data = self.parse_data(self.cur_offset, dstart, dstop, text)
         # build fcmdata object
         channels = []
@@ -85,12 +93,36 @@ class FCSreader(object):
                         to_logicle.append(i-1)
                 except KeyError:
                     pass
-                
-                   
+       
+#        if auto_comp:
+#            if self.spill is None:
+#                try:
+#                    self.spill, self.sidx = get_spill(text['spill'])
+#                except KeyError:
+#                    pass
+#            if self.spill is not None and self.sidx is not None:
+#                idx = []
+#                for si in self.sidx:
+#                    idx.append(base_chan_name.index(si))
+#                c = _compensate(data[:,idx], self.spill)
+#                data[:,idx] = c
+#               
+#               
+#                   
+#            if header['version'] == 3.0 and self.logicle == True:
+#                T = 262144
+#                m = 4.5 * log(10)
+#
+#                for i in to_logicle:
+#                    dj = data[:,i]
+#                    r = quantile(dj[dj < 0], 0.05)
+#                    data[:,i] = _logicle(dj, T, m, r)
 
+           
         path, name = os.path.split(self.filename)
         name, ext = os.path.splitext(name)
         
+        # My modifications
         tmp = {}
         for t in text:
             if 'display' in t:
@@ -100,30 +132,23 @@ class FCSreader(object):
         defXform = []
         for item in sorted(tmp.iteritems(), key=itemgetter(0)):
             defXform.append(item[1])
+            
         
-        
-#        return (name, data, channels, scchannels, text, header, analysis)
-#        name, data, channels, scchannels,
-#            Annotation({'text': text,
-#                        'header': header,
-#                        'analysis': analysis,
-#                        }))
-       
         return (channels, data, {'text': text, 'header': header,
                                  'analysis': analysis, 'defXform': defXform})
-
-
-
+       
    
     def read_bytes(self, offset, start, stop):
         """Read in bytes from start to stop inclusive."""
         self._fh.seek(offset+start)
+       
         return self._fh.read(stop-start+1)
    
     def parse_header(self, offset):
         """
         Parse the FCM data in fcs file at the offset (supporting multiple
         data segments in a file
+       
         """
        
         header = {}
@@ -144,6 +169,14 @@ class FCSreader(object):
         return header
        
    
+    def fix_lmd(self, offset, start, stop):
+        """function to handle lmd counting differently then most other FCS data"""
+        text = self.read_bytes(offset, start, stop)
+        for j in range(0,-10,-1):
+            if text[0] == text[j-1]:
+                return j
+        return 255 #TODO raise error
+     
     def parse_text(self, offset, start, stop):
         """return parsed text segment of fcs file"""
        
@@ -174,7 +207,7 @@ class FCSreader(object):
         elif text['byteord'] == '4,3,2,1' or text['byteord'] == '2,1':
             order = '>'
         else:
-            sys.stderr.write("unsupported byte order %s , using default @" % text['byteord'] )
+            warn("unsupported byte order %s , using default @" % text['byteord'] )
             order = '@'
         # from here on out we assume mode l (list)
        
@@ -194,6 +227,7 @@ class FCSreader(object):
    
     def parse_int_data(self, offset, start, stop, bitwidth, drange, tot, order):
         """Parse out and return integer list data from fcs file"""
+       
         if reduce(and_, [item in [8, 16, 32] for item in bitwidth]):
             if len(set(bitwidth)) == 1: # uniform size for all parameters
                 # calculate how much data to read in.
@@ -217,7 +251,7 @@ class FCSreader(object):
                         val = bitmask & unpack('%s%s' % (order, fmt_integer(curwidth)), bin_string)[0]
                         tmp.append(val)
         else: #non starndard bitwiths...  Does this happen?
-            sys.stderr.write('Non-standard bitwidths for data segments')
+            warn('Non-standard bitwidths for data segments')
             return None
         return numpy.array(tmp).reshape((tot, len(bitwidth)))
    
@@ -226,7 +260,7 @@ class FCSreader(object):
        
         #count up how many to read in
         num_items = (stop-start+1)/calcsize(dtype)
-        # unpack binary data
+
         tmp = unpack('%s%d%s' % (order, num_items, dtype), self.read_bytes(offset, start, stop))
         return numpy.array(tmp).reshape((tot, len(tmp)/tot))
    
@@ -246,7 +280,7 @@ def parse_pairs(text):
     if delim == r'\a'[0]: # test for delimiter being \
         delim = '\\\\' # regex will require it to be \\
     if delim != text[-1]:
-        sys.stderr.write("text in segment does not start and end with delimiter")
+        warn("text in segment does not start and end with delimiter")
     tmp = text[1:-1].replace('$','')
     # match the delimited character unless it's doubled
     regex = re.compile('(?<=[^%s])%s(?!%s)' % (delim, delim, delim))
@@ -288,8 +322,17 @@ def log_factory(base):
 
 log2 = log_factory(2)
 
+def loadFCS(filename, auto_logicle=True, auto_comp=True, spill=None):
+    """Load and return a FCM data object from an FCS file"""
+   
+    tmp = FCSreader(filename, auto_logicle, spill=spill)
+    return tmp.get_FCMdata(auto_comp)
 
 def is_fl_channel(name):
+    """
+    Try and decide if a channel is a flourescent channel or if it's some other type
+    returns a boolean
+    """
     name = name.lower()
     if name.startswith('cs'):
         return False
@@ -305,3 +348,4 @@ def is_fl_channel(name):
         return False
     else:
         return True
+
