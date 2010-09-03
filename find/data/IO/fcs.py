@@ -2,7 +2,9 @@
 Provide access to data stored in FCS files
 
 Input method taken from the py-fcm project at:
-http://code.google.com/p/py-fcm/ 
+https://code.google.com/p/py-fcm/source/browse/src/io/readfcs.py
+
+This version of the reader is from the 9/02/2009 revision
 """
 from error import UnimplementedFcsDataMode
 
