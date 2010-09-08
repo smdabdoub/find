@@ -6,7 +6,7 @@ https://code.google.com/p/py-fcm/source/browse/src/io/readfcs.py
 
 This version of the reader is from the 07/14/2010 revision
 """
-from error import UnimplementedFcsDataMode
+from error import UnimplementedFcsDataMode, warnUser
 
 from operator import and_, itemgetter
 from math import log
@@ -207,7 +207,7 @@ class FCSreader(object):
         elif text['byteord'] == '4,3,2,1' or text['byteord'] == '2,1':
             order = '>'
         else:
-            warn("unsupported byte order %s , using default @" % text['byteord'] )
+            warnUser("unsupported byte order %s , using default @" % text['byteord'] )
             order = '@'
         # from here on out we assume mode l (list)
        
@@ -251,7 +251,7 @@ class FCSreader(object):
                         val = bitmask & unpack('%s%s' % (order, fmt_integer(curwidth)), bin_string)[0]
                         tmp.append(val)
         else: #non starndard bitwiths...  Does this happen?
-            warn('Non-standard bitwidths for data segments')
+            warnUser('Non-standard bitwidths for data segments')
             return None
         return numpy.array(tmp).reshape((tot, len(bitwidth)))
    
@@ -280,7 +280,7 @@ def parse_pairs(text):
     if delim == r'\a'[0]: # test for delimiter being \
         delim = '\\\\' # regex will require it to be \\
     if delim != text[-1]:
-        warn("text in segment does not start and end with delimiter")
+        warnUser("text in segment does not start and end with delimiter")
     tmp = text[1:-1].replace('$','')
     # match the delimited character unless it's doubled
     regex = re.compile('(?<=[^%s])%s(?!%s)' % (delim, delim, delim))
