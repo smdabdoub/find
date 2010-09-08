@@ -51,7 +51,7 @@ class TreePopupMenu(wx.Menu):
             # Isolate clusters
             self.isolate = wx.MenuItem(self, wx.NewId(), 'Isolate Clusters', 'Allows for separation of the clusters into new data sets')
             self.AppendItem(self.isolate)
-            self.Bind(wx.EVT_MENU, self.parent.TopLevelParent.onIsolateClusters, id=self.isolate.GetId())
+            self.Bind(wx.EVT_MENU, self.parent.TopLevelParent.OnIsolateClusters, id=self.isolate.GetId())
         
         # Generic menu items    
         # Delete item
