@@ -193,7 +193,7 @@ def separate(data, ids):
     @return: A list of array objects representing clusters.
     """
     #TODO: unique1d is deprecated
-    clustIDs = np.unique1d(ids)
+    clustIDs = np.unique(ids)
     return [data[ids==id] for id in clustIDs]
 
 
