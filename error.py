@@ -114,7 +114,8 @@ def sendErrorReport(err, userMsg):
 
 
         
-        
+def warnUser(message, title='Warning'):
+    wx.MessageBox(message, title, wx.OK | wx.ICON_WARNING)
         
         
         
