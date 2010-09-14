@@ -143,7 +143,7 @@ class FacsPlotPanel(PlotPanel):
         @param plotType: One of the module-defined ID_PLOTS_* constants.
         """
         n = len(self.subplots)+1
-        self.subplots.append(Subplot(n, dataStoreIndex, clusteringIndex, plotType))
+        self.subplots.append(Subplot(n, dataStoreIndex, clusteringIndex, plotType, self.figure))
         self.SelectedSubplotIndex = n
         self.draw()    
         
@@ -244,7 +244,7 @@ class FacsPlotPanel(PlotPanel):
         """
         if (self.SelectedSubplotIndex is not None):
             self.subplots[self.SelectedSubplotIndex-1] = Subplot(self.SelectedSubplotIndex, dataID, 
-                                                            clusterID, plotType)
+                                                            clusterID, plotType, self.figure)
             self.draw()
         else:
             self.addSubplot(dataID, clusterID, plotType)
@@ -314,17 +314,15 @@ class FacsPlotPanel(PlotPanel):
         Display the properties dialog for the current subplot.
         """
         subplot = self.CurrentSubplot
-        try:
-            dlg = pdialogs.getPlotOptionsDialog(self, subplot)
+        dlg = pdialogs.getPlotOptionsDialog(self, subplot)
+        if dlg is not None:
             if (dlg.ShowModal() == wx.ID_OK):
                 subplot.Options = dlg.Options
                 self.draw()
             dlg.Destroy()
-        except AttributeError:
-            dlg = wx.MessageDialog(None, 'There are no user-definable properties for this plot.',
+        else:
+            dlg = wx.MessageBox(None, 'There are no user-definable properties for this plot.',
                                    'No Properties Dialog', wx.OK|wx.ICON_INFORMATION)
-            dlg.ShowModal()
-            dlg.Destroy()
     
     
     
@@ -435,13 +433,14 @@ class Subplot(object):
     Represents a single subplot and the options necessary for specifying what is displayed.
     """
     
-    def __init__(self, n = None, dataStoreIndex = None, clusteringIndex = None, plotType = pmethods.ID_PLOTS_SCATTER_2D):
+    def __init__(self, n=None, dataStoreIndex=None, clusteringIndex=None, plotType=pmethods.ID_PLOTS_SCATTER_2D, parent=None):
         self.n = n
         self.dataIndex = dataStoreIndex
         self.clustIndex = clusteringIndex
         self.plotType = plotType
         self.opts = {}
         self.axes = None
+        self.parent = parent
         self.mnp = None  #TODO: switch to allow 1,1,1 format for alt method in maplotlib
         self._title = ''
         self.linkedDimensions = None
