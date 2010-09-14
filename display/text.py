@@ -7,10 +7,10 @@ import wx
 from wx.lib.stattext import GenStaticText
 
 class StyledStaticText(GenStaticText):
-    def __init__(self, parent, id=wx.ID_ANY, label='', pos=(-1, -1),
-        size=(-1, -1), style=0, name='StyledStaticText', color='#000000'):
+    def __init__(self, parent, id=wx.ID_ANY, label='', pos=(-1, -1), 
+                 style=0, name='StyledStaticText', color='#000000'):
 
-        GenStaticText.__init__(self, parent, id, label, pos, size, style, name)
+        GenStaticText.__init__(self, parent, id, label, pos, style=style, name=name)
         
         label, style, weight = self.parse(label)
         
