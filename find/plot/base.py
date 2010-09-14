@@ -222,8 +222,6 @@ class TransformOptionsPanel(OptionsDialogPanel):
         wx.Panel.__init__(self, parent)
 
         # Init controls
-        transformLabel = StyledStaticText(self, wx.ID_ANY, "**Transforms**")
-        
         self.transforms = ['linear','log'] 
         self.cbxX_Transform = wx.ComboBox(self, choices=self.transforms, 
                                           style=wx.CB_READONLY)
@@ -244,7 +242,6 @@ class TransformOptionsPanel(OptionsDialogPanel):
 
         # Sizer
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
-        self.Sizer.Add(transformLabel, 0)
         self.Sizer.Add(fgTransform, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
 
@@ -289,5 +286,57 @@ class TransformOptionsPanel(OptionsDialogPanel):
         options = {}
         options['xTransform'] = self.cbxX_Transform.StringSelection
         options['yTransform'] = self.cbxY_Transform.StringSelection
+        options['transformAuto'] = self.chkTransformAuto.Value
+        return options
+    
+
+class SingleTransformOptionsPanel(OptionsDialogPanel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        
+        # Init controls
+        self.transforms = ['linear','log'] 
+        self.cbxTransform = wx.ComboBox(self, choices=self.transforms, 
+                                          style=wx.CB_READONLY)
+        self.chkTransformAuto = wx.CheckBox(self, label="Auto")
+        self.chkTransformAuto.Bind(wx.EVT_CHECKBOX, self.chkTransformAuto_Click)
+        
+
+        # Layout
+        fgTransform = wx.FlexGridSizer(1, 2, 5, 5)
+        fgTransform.Add(self.cbxTransform, 1, wx.ALIGN_LEFT | wx.RIGHT, 10)
+        fgTransform.Add(self.chkTransformAuto, 1, wx.EXPAND)
+
+        # Sizer
+        self.Sizer = wx.BoxSizer(wx.VERTICAL)
+        self.Sizer.Add(fgTransform, 0, wx.ALIGN_CENTER_HORIZONTAL)
+
+
+    def chkTransformAuto_Click(self, event):
+        self.cbxTransform.Enable(not event.Selection)
+
+    def loadOptions(self, opts):
+        """
+        This method loads the form input controls with saved/default data.
+        
+        :@type opts: dict  
+        :@param opts: A dict of plot settings.
+        """
+        self.cbxTransform.StringSelection = opts['transform']
+        self.chkTransformAuto.Value = opts['transformAuto']
+        
+        # If auto is checked, disable the combo box
+        if self.chkTransformAuto.Value:
+            self.cbxTransform.Enable(False)
+            
+    
+    def validate(self):
+        return []
+
+
+    @property
+    def Options(self):
+        options = {}
+        options['transform'] = self.cbxTransform.StringSelection
         options['transformAuto'] = self.chkTransformAuto.Value
         return options
