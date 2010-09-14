@@ -13,13 +13,13 @@ def addPluginDialog(ID, dialog):
 
 
 def getPlotOptionsDialog(parent, subplot):
-    try:
-        int(subplot.plotType)
-    except ValueError:
-        return dialogs[subplot.plotType](parent, subplot)
+    if type(subplot.plotType) is int:
+        subplot.plotType = methods.strID(subplot.plotType)
         
-    subplot.plotType = methods.strID(subplot.plotType)
-    return dialogs[subplot.plotType](parent, subplot)
+    if subplot.plotType in dialogs:
+        return dialogs[subplot.plotType](parent, subplot)
+    
+    return None
 
 
 import scatterplot2d, boxplot, barplot#, histogram
