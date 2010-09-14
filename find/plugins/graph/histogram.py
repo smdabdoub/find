@@ -42,7 +42,7 @@ def histogram(subplot, figure, dims):
         ind = np.linspace(np.min(data), np.max(data), data.shape[0]*.1)
         gkde = stats.gaussian_kde(data)
         kdepdf = gkde.evaluate(ind)
-        subplot.axes.plot(ind, kdepdf, label='kde', color='red')
+        subplot.axes.plot(ind, kdepdf, label='kde', color='blue')
     
     # Binned Histogram
     if opts['type'] != 'Gaussian KDE':
@@ -66,7 +66,7 @@ from display.formatters import IntFormatter
 import wx
 
 class HistogramOptionsDialog(OptionsDialog):
-    def __init__(self, parent, subplot, dims = None):
+    def __init__(self, parent, subplot):
         """
         @type parent: Window
         @param parent: The parent window for the dialog
@@ -146,7 +146,7 @@ class HistogramOptionsPanel(OptionsDialogPanel):
             msg.append("A valid integer must be entered.")
         else:
             val = int(self.txtBins.Value)
-            if val < -10 or val > 1000:
+            if val < 10 or val > 1000:
                 msg.append("A value between 10 and 1000 must be entered.")
             
         return msg
