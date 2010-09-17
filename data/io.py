@@ -34,7 +34,6 @@ def loadDataFile(filename, window=None):
     raise UnknownFileType(filename)
 
 
-#TODO: implement
 def exportDataFile(eID, filename, fcData, window=None):
     """
     Passes the given FacsData instance to the specified IO class.
