@@ -318,11 +318,91 @@ class Clustering(object):
         
         
         
+class FigureStore(object):
+    _figures = {}
+    _selectedIndex = None
+
+    
+    @classmethod
+    def add(cls, figure):
+        """
+        Adds a Figure instance to the store.
         
+        @type data: Figure
+        @param data: The new Figure to include in the store.
+        """
+        # set the ID for the figure
+        if cls._figures:
+            figure.ID = cls.sort()[-1][0] + 1
+        else:
+            figure.ID = 0
         
+        # add to the store 
+        cls._figures[figure.ID] = figure
+        cls._selectedIndex = figure.ID
         
+    
+    @classmethod
+    def remove(cls, id):
+        """
+        Removes the Figure instance at the specified index
+        
+        @type id: int
+        @param id: The index of the Figure instance to remove 
+        """
+        if (id in cls._figures):
+            del cls._figures[id]
+        
+        if len(cls._figures) > 0:
+            cls._selectedIndex = cls._figures.keys()[0]
+        else:
+            cls._selectedIndex = None
+
+    @classmethod
+    def get(cls, key):
+        return cls._figures[key]
+        
+    @classmethod
+    def getFigures(cls):
+        """
+        Retrieves all figures in the store.
+        
+        @rtype: dict
+        @return: A dictionary containing all the figures currently in the store, keyed
+                 on the figure ID.
+        """
+        return cls._figures
+    
+    @classmethod
+    def getSelectedFigure(cls):
+        if cls._selectedIndex is not None:
+            return cls._figures[cls._selectedIndex]
+        
+    @classmethod
+    def setSelectedFigure(cls, id):
+        if id in cls._figures:
+            cls._selectedIndex = id
+    
+    @classmethod
+    def getSelectedIndex(cls):
+        return cls._selectedIndex
+    
+    
+    @classmethod
+    def sort(cls):
+        """sort the figures dict based on key"""
+        return sorted(cls._figures.iteritems(), key=itemgetter(0))
 
 
+
+class Figure(object):
+    def __init__(self, name, subplots, grid, axes):
+        self.ID = id
+        self.name = name
+        self.subplots = subplots
+        self.grid = grid
+        self.axes = axes
+        
         
         
         
