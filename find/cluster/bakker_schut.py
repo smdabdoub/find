@@ -5,6 +5,7 @@ Created on Mar 1, 2010
 '''
 import util
 import data.handle as dh
+import transforms.methods as tm
 
 import numpy as np
 from scipy.cluster.vq import kmeans2
@@ -38,9 +39,8 @@ def bakker_kMeans(data, **kwargs):
     if 'initClusters' in kwargs.keys():
         initClusters = int(kwargs['numClusters'])
     
-    #TODO: this transform should be moved to the transforms module (whenever I make it)
     # Log transform
-    logData = np.log10(np.clip(data, a_min=0.00001, a_max=np.max(np.maximum.reduce(data))))
+    logData = tm.getMethod('log')(data)
     
     # Choose large # (200 as suggested by authors) of non-random initial centers
     centers = util.kinit(logData, initClusters)
