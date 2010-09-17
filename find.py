@@ -11,7 +11,7 @@ import plot.methods as pMthds
 
 import display.dialogs as displayDialogs
 import display.view as displayView
-from data.store import DataStore, FacsData
+from data.store import DataStore, FacsData, FigureStore, Figure
 from data import io
 import error
 import plugin
@@ -33,9 +33,10 @@ ID_LOAD_STATE = wx.NewId()
 ID_SAVE_STATE = wx.NewId()
 
 # Plots Menu
-ID_PLOTS_ADD      = wx.NewId()
-ID_PLOTS_SETUP    = wx.NewId()
-ID_PLOTS_SAVE     = wx.NewId()
+ID_PLOTS_ADD     = wx.NewId()
+ID_PLOTS_SETUP   = wx.NewId()
+ID_PLOTS_EXPORT  = wx.NewId()
+ID_PLOTS_ADD_FIG = wx.NewId()
 
 # Data Menu
 ID_DATA_ISOLATE = wx.NewId()
@@ -165,14 +166,21 @@ class MainWindow(wx.Frame):
                                'Match the cluster IDs between two clusters in order to sync their colors')
         self.Bind(wx.EVT_MENU, self.OnRecolorClusters, id=ID_DATA_RECOLOR)
 
+
         # Plots menu
         self.plotsMenu = wx.Menu()
         self.plotsMenu.Append(ID_PLOTS_SETUP, "Setup", 
                          " Indicate how the figure should be arranged in terms of subplots")
         self.Bind(wx.EVT_MENU, self.OnSetupSubplots, id=ID_PLOTS_SETUP)
-        self.plotsMenu.Append(ID_PLOTS_SAVE, "Save Figure", 
+        
+        self.plotsMenu.Append(ID_PLOTS_EXPORT, "Export Figure...", 
                          " Export the figure as an image")
-        self.Bind(wx.EVT_MENU, self.OnSaveFigure, id=ID_PLOTS_SAVE)
+        self.Bind(wx.EVT_MENU, self.OnExportFigure, id=ID_PLOTS_EXPORT)
+        
+        self.plotsMenu.Append(ID_PLOTS_ADD_FIG, "Add New Figure", 
+                              "Add a new Figure, and switch to it.")
+        self.Bind(wx.EVT_MENU, self.OnAddFigure, id=ID_PLOTS_ADD_FIG)
+        
         self.plotsMenu.Append(ID_PLOTS_ADD, "Add Subplot", " Add a subplot to the current figure")
         self.Bind(wx.EVT_MENU, self.OnAddSubplot, id=ID_PLOTS_ADD)
         
@@ -437,6 +445,11 @@ class MainWindow(wx.Frame):
             if (numLoaded > 1):
                 self.facsPlotPanel.updateSubplotGrid(int(math.ceil(numLoaded/2.0)), 2)
             self.statusbar.SetStatusText('All data files loaded.')
+               
+            fig = Figure('Default', self.facsPlotPanel.subplots, 
+                         (self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols), 
+                         self.facsPlotPanel.SelectedAxes)
+            FigureStore.add(fig)
             self.treeCtrlPanel.updateTree()
             
         dlg.Destroy()
@@ -555,6 +568,10 @@ class MainWindow(wx.Frame):
         """
         Instructs the FacsPlotPanel instance to add a subplot to the figure.
         """
+        self.addSubplot()
+    
+
+    def addSubplot(self):
         cds = DataStore.getCurrentDataSet()
         if cds is None:
             return
@@ -566,15 +583,16 @@ class MainWindow(wx.Frame):
         else:
             self.facsPlotPanel.addSubplot(DataStore.getCurrentIndex(), clusteringIndex)
         
-        
+
     def OnSetupSubplots(self, event):
         dlg = displayDialogs.FigureSetupDialog(self, self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
         if dlg.ShowModal() == wx.ID_OK:
             self.facsPlotPanel.updateSubplotGrid(dlg.getRows(), dlg.getColumns())
         
         dlg.Destroy()
-            
-    def OnSaveFigure(self, event):
+
+
+    def OnExportFigure(self, event):
         formats = "PNG (*.png)|*.png|PDF (*.pdf)|*.pdf|PostScript (*.ps)|*.ps|EPS (*.eps)|*.eps|SVG (*.svg)|*.svg"
         fmts = ['png', 'pdf', 'ps', 'eps', 'svg']
         dlg = wx.FileDialog(self, "Save Figure", self.dirname, "", formats, wx.FD_SAVE)
@@ -587,6 +605,22 @@ class MainWindow(wx.Frame):
             self.statusbar.SetStatusText("Figure saved to "+path, 0)
         
         dlg.Destroy()
+
+
+    def OnAddFigure(self, event):
+        nameDlg = displayDialogs.EditNameDialog(self, '')
+        if (nameDlg.ShowModal() == wx.ID_OK):
+            fig = Figure(nameDlg.Text, [], (1,1), (0,1))
+            FigureStore.add(fig)
+            dv.switchFigures(self.facsPlotPanel, fig)
+            self.addSubplot()
+    
+            self.treeCtrlPanel.updateTree()   
+
+        nameDlg.Destroy()    
+    
+    
+    
     
     # Data Menu
     
