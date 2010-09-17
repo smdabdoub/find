@@ -8,7 +8,7 @@ This module contains classes and methods used to visualize FACS data.
 
 
 # Local imports
-from display.contextmenus import FigurePopupMenu
+from display.contextmenus import SubplotPopupMenu
 from display.dialogs import EditNameDialog
 import plot.methods as pmethods
 import plot.dialogs as pdialogs
@@ -16,7 +16,7 @@ from store import DataStore
 
 # 3rd Party imports
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.figure import Figure
+import matplotlib.figure as mfig
 from matplotlib.pyplot import subplot
 import wx
 
@@ -37,7 +37,7 @@ class PlotPanel(wx.Panel):
         self.singlePlotWindow = False
         
         # initialize matplotlib stuff
-        self.figure = Figure(None, dpi)
+        self.figure = mfig.Figure(None, dpi)
         self.figure.subplots_adjust(wspace=0.5, hspace=0.5)
         self.canvas = FigureCanvas(self, -1, self.figure)
         self._setColor(color)
@@ -106,6 +106,9 @@ class FacsPlotPanel(PlotPanel):
         self.subplotCols = 1
         self._selectedSubplotIndex = None
         
+        self.XAxisColumn = None
+        self.YAxisColumn = None
+        
 
         # initiate plotter
         PlotPanel.__init__( self, parent, **kwargs )
@@ -123,7 +126,7 @@ class FacsPlotPanel(PlotPanel):
                 # Right click
                 if (event.button == 3):
                     pt = event.guiEvent.GetPosition()
-                    self.PopupMenuXY(FigurePopupMenu(self), pt.x, pt.y)
+                    self.PopupMenuXY(SubplotPopupMenu(self), pt.x, pt.y)
         except wx.PyAssertionError as pae:
             print pae
     
@@ -324,6 +327,10 @@ class FacsPlotPanel(PlotPanel):
             dlg = wx.MessageBox(None, 'There are no user-definable properties for this plot.',
                                    'No Properties Dialog', wx.OK|wx.ICON_INFORMATION)
     
+    
+    @property
+    def SelectedAxes(self):
+        return (self.XAxisColumn, self.YAxisColumn)
     
     
     def updateAxes(self, selectedAxes, redraw=False):
@@ -556,9 +563,11 @@ class Subplot(object):
 
 
 
-
-
-    
+# Module methods
+def switchFigures(panel, figure, redraw=False):
+    panel.subplots = figure.subplots
+    panel.updateSubplotGrid(figure.grid[0], figure.grid[1], False)
+    panel.updateAxes(figure.axes, redraw)
     
     
     
