@@ -44,7 +44,7 @@ class ValidatedDialog(wx.Dialog):
         event.Skip()
         
 
-
+#TODO: validate for no input
 class EditNameDialog(wx.Dialog):
     """
     This dialog allows the user to rename the labels of the incoming data set
