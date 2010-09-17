@@ -6,7 +6,7 @@ import wx
 
 from itertools import ifilter
 
-class TreePopupMenu(wx.Menu):
+class DataTreePopupMenu(wx.Menu):
     def __init__(self, parent, **kwargs):
         wx.Menu.__init__(self)
 
@@ -58,7 +58,6 @@ class TreePopupMenu(wx.Menu):
         delete = wx.MenuItem(self, wx.NewId(), 'Delete', 'Delete the current item')
         self.AppendItem(delete)
         self.Bind(wx.EVT_MENU, self.OnDelete, id=delete.GetId())
-        self.AppendSeparator()
         
         # View all data
 #        view = wx.MenuItem(self, wx.NewId(), 'View All Data')
@@ -118,6 +117,32 @@ class TreePopupMenu(wx.Menu):
         
     
 
+class FigureTreePopupMenu(wx.Menu):
+    def __init__(self, parent, **kwargs):
+        wx.Menu.__init__(self)
+
+        self.parent = parent
+
+
+        # Rename
+        self.rename = wx.MenuItem(self, wx.NewId(), 'Rename', 'Give a new display name to this data item')
+        self.AppendItem(self.rename)
+        self.Bind(wx.EVT_MENU, self.OnRename, id=self.rename.GetId())
+
+        # Delete
+        self.delete = wx.MenuItem(self, wx.NewId(), 'Delete', 'Delete the current item')
+        self.AppendItem(self.delete)
+        self.Bind(wx.EVT_MENU, self.OnDelete, id=self.delete.GetId())
+
+
+
+    def OnRename(self, event):
+        self.parent.renameItem()
+
+    def OnDelete(self, event):
+        self.parent.deleteSelection()
+
+
 
 
 
@@ -125,7 +150,7 @@ ID_PLOTS_DELETE     = wx.NewId()
 ID_PLOTS_PROPERTIES = wx.NewId()
 ID_PLOTS_RENAME     = wx.NewId()
         
-class FigurePopupMenu(wx.Menu):
+class SubplotPopupMenu(wx.Menu):
     """
     This menu is created when a right-click event occurs on a FACS plot.
     It is meant to extend the Plots menu that exists on the main form menubar. 
