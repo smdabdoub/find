@@ -352,7 +352,12 @@ class FacsPlotPanel(PlotPanel):
 #            for subplot in self.subplots:
 #                subplot.drawFlag = True
             self.draw()
-            
+
+
+    @property
+    def Grid(self):
+        return (self.subplotRows, self.subplotCols)
+    
     #TODO: The redraw param should probably default to False
     def updateSubplotGrid(self, rows, cols, redraw=True):
         """
@@ -564,10 +569,15 @@ class Subplot(object):
 
 
 # Module methods
-def switchFigures(panel, figure, redraw=False):
-    panel.subplots = figure.subplots
-    panel.updateSubplotGrid(figure.grid[0], figure.grid[1], False)
-    panel.updateAxes(figure.axes, redraw)
+def switchFigures(panel, currFigure, newFigure, redraw=False):
+    # Save existing plots to current Figure
+    currFigure.subplots = panel.subplots
+    currFigure.grid = panel.Grid
+    currFigure.axes = panel.SelectedAxes
+    # Replace current with new
+    panel.subplots = newFigure.subplots
+    panel.updateSubplotGrid(newFigure.grid[0], newFigure.grid[1], False)
+    panel.updateAxes(newFigure.axes, redraw)
     
     
     
