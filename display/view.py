@@ -25,8 +25,8 @@ class FacsTreeCtrlPanel(wx.Panel):
         wx.Panel.__init__(self, parent, -1, style=wx.WANTS_CHARS, size=(200,550))
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.tree = CT.CustomTreeCtrl(self, wx.NewId(), wx.DefaultPosition, (200,550), CT.TR_DEFAULT_STYLE)
-        self.dataTreeExpanded = False
-        self.figureTreeExpanded = False
+        self.dataTreeExpanded = True
+        self.figureTreeExpanded = True
 
         isz = (16,16)
         il = wx.ImageList(isz[0], isz[1])
@@ -135,10 +135,9 @@ class FacsTreeCtrlPanel(wx.Panel):
         Get the data item behind the currently selected tree item.
         
         @rtype treeItemData: int or tuple
-        @return treeItemData: A single index if the item to be selected is
-            a FacsData object. Otherwise a 2-tuple indicating the index of 
-            the FacsData object and the index of the clustering within it
-            to select.
+        @return treeItemData: An int if the selected item is
+            a sub-root node, i.e. the Data Sets or Figure Sets nodes. Otherwise a n-tuple with the 
+            set type followed by the object ID, any subset IDs (clustering), and any other included info.
         """
         sel = self.tree.GetSelection()
         return self.tree.GetItemPyData(sel)
@@ -202,13 +201,15 @@ class FacsTreeCtrlPanel(wx.Panel):
             
             if item[0] is FIGURE_SET_ITEM:
                 if item[1] != FigureStore.getSelectedIndex():
+                    currFig = FigureStore.getSelectedFigure()
+                    newFig = FigureStore.get(item[1])
+                    switchFigures(self.Parent.TopLevelParent.facsPlotPanel, currFig, newFig, True)
                     FigureStore.setSelectedFigure(item[1])
-                    switchFigures(self.Parent.TopLevelParent.facsPlotPanel, FigureStore.getSelectedFigure(), True)
         
     
     def displayDataInfo(self):
-        type, id, _ = self.getSanitizedItemSelectionData()
-        if (type is DATA_SET_ITEM):
+        item = self.getSanitizedItemSelectionData()
+        if item is not None and item[0] is DATA_SET_ITEM:
             data = DataStore.get(id)
             dlg = DataInfoDialog(self.Parent, data)
             dlg.Show()
@@ -216,14 +217,19 @@ class FacsTreeCtrlPanel(wx.Panel):
     def plotData(self, plotType):
         item = self.getSanitizedItemSelectionData()
         
+        if item is None:
+            return
+        
         dataID = item[1]
         clusterID = None if len(item) < 3 else item[2]
         self.Parent.TopLevelParent.facsPlotPanel.plotData(dataID, clusterID, plotType)
             
     def clearClusteringSelection(self):
-        type, id, _ = self.getSanitizedItemSelectionData()
-        DataStore.get(id).selectedClustering = None
-        self.updateTree()
+        item = self.getSanitizedItemSelectionData()
+        
+        if item is not None and item[0] is DATA_SET_ITEM:
+            DataStore.get(id).selectedClustering = None
+            self.updateTree()
     
     def renameItem(self):
         """
@@ -337,7 +343,6 @@ class FacsTreeCtrlPanel(wx.Panel):
         self.tree.SetDimensions(0, 0, w, h)
 
 
-    #TODO: it may not be necessary to do this check
     def OnItemExpanded(self, event):
         item = event.GetItem()
         if item:
