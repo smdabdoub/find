@@ -447,7 +447,7 @@ class MainWindow(wx.Frame):
             self.statusbar.SetStatusText('All data files loaded.')
                
             fig = Figure('Default', self.facsPlotPanel.subplots, 
-                         (self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols), 
+                         self.facsPlotPanel.Grid, 
                          self.facsPlotPanel.SelectedAxes)
             FigureStore.add(fig)
             self.treeCtrlPanel.updateTree()
@@ -610,9 +610,10 @@ class MainWindow(wx.Frame):
     def OnAddFigure(self, event):
         nameDlg = displayDialogs.EditNameDialog(self, '')
         if (nameDlg.ShowModal() == wx.ID_OK):
-            fig = Figure(nameDlg.Text, [], (1,1), (0,1))
-            FigureStore.add(fig)
-            dv.switchFigures(self.facsPlotPanel, fig)
+            newFig = Figure(nameDlg.Text, [], (1,1), (0,1))
+            currFig = FigureStore.getSelectedFigure() 
+            FigureStore.add(newFig)
+            dv.switchFigures(self.facsPlotPanel, currFig, newFig)
             self.addSubplot()
     
             self.treeCtrlPanel.updateTree()   
