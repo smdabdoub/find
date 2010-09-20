@@ -309,16 +309,11 @@ class FacsTreeCtrlPanel(wx.Panel):
     # Tree Event Handling
     def OnLeftDown(self, event):
         pt = event.GetPosition()
-        item, flags = self.tree.HitTest(pt)
+        item, _ = self.tree.HitTest(pt)
         if item:
             self.tree.SelectItem(item)
-            
-            print 'before launcher'
-            launcher = Launcher([self.selectItemTreeSelection, self.updateTree])
-            launcher.start()
-            print 'after launcher'
-            self.tree.SelectItem(item)
-            item.SetHilight(True)
+            self.selectItemTreeSelection()
+            self.updateTree()
 
         event.Skip()
 
@@ -326,7 +321,7 @@ class FacsTreeCtrlPanel(wx.Panel):
     # Handle context menus
     def OnRightUp(self, event):
         pt = event.GetPosition();
-        item, flags = self.tree.HitTest(pt)
+        item, _ = self.tree.HitTest(pt)
         if item:
             self.tree.SelectItem(item)
             item = self.getSanitizedItemSelectionData()
@@ -362,17 +357,6 @@ class FacsTreeCtrlPanel(wx.Panel):
 
 
 
-from threading import Thread
-class Launcher(Thread):
-    def __init__(self, funcs):
-        Thread.__init__(self)
-        self.funcs = funcs
-        
-    def run(self):
-        print 'begin run'
-        for func in self.funcs:
-            print 'launching...'
-            func()
 
 
 
