@@ -5,13 +5,13 @@ Created on Aug 23, 2010
 '''
 
 from cluster.util import clusteringInfo
-from data.store import FacsData, DataStore, FigureStore, Figure
+from data.store import FacsData, DataStore, FigureStore
 from data.view import switchFigures
-from display.dialogs import DataInfoDialog, EditNameDialog
 from display.contextmenus import DataTreePopupMenu, FigureTreePopupMenu
+from display.dialogs import DataInfoDialog, EditNameDialog
 import cluster.methods
-import wx.lib.customtreectrl as CT
 import wx
+import wx.lib.agw.customtreectrl as CT
 
 
 
@@ -312,9 +312,14 @@ class FacsTreeCtrlPanel(wx.Panel):
         item, flags = self.tree.HitTest(pt)
         if item:
             self.tree.SelectItem(item)
-            self.selectItemTreeSelection()
             
-            self.updateTree()
+            print 'before launcher'
+            launcher = Launcher([self.selectItemTreeSelection, self.updateTree])
+            launcher.start()
+            print 'after launcher'
+            self.tree.SelectItem(item)
+            item.SetHilight(True)
+
         event.Skip()
 
 
@@ -357,8 +362,17 @@ class FacsTreeCtrlPanel(wx.Panel):
 
 
 
-
-
+from threading import Thread
+class Launcher(Thread):
+    def __init__(self, funcs):
+        Thread.__init__(self)
+        self.funcs = funcs
+        
+    def run(self):
+        print 'begin run'
+        for func in self.funcs:
+            print 'launching...'
+            func()
 
 
 
