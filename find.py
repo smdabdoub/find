@@ -479,17 +479,18 @@ class MainWindow(wx.Frame):
                 dlg.Path = dlg.Path + '.find'
             
             try:
-                selectedAxes = (self.facsPlotPanel.XAxisColumn, self.facsPlotPanel.YAxisColumn)
+                selectedAxes = self.facsPlotPanel.SelectedAxes
             except AttributeError:
                 selectedAxes = (None, None)
-            grid = (self.facsPlotPanel.subplotRows, self.facsPlotPanel.subplotCols)
-            saveState(dlg.Directory, dlg.Filename, self.facsPlotPanel.subplots, 
-                      self.facsPlotPanel.SelectedSubplotIndex, selectedAxes, grid)
+            saveState(dlg.Directory, dlg.Filename, FigureStore.getFigures(), 
+                      FigureStore.getSelectedIndex(), self.facsPlotPanel.subplots, 
+                      self.facsPlotPanel.SelectedSubplotIndex, selectedAxes, 
+                      self.facsPlotPanel.Grid)
             self.statusbar.SetStatusText("Project saved to %s" % dlg.Path, 0)
             
         dlg.Destroy()
             
-    
+    #TODO: Load Figures correctly
     def OnLoadState(self, event):
         from data.io import loadState
         
