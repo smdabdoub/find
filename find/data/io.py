@@ -1,6 +1,6 @@
 """
 """
-from data.store import DataStore, FacsData
+from data.store import DataStore, FacsData, FigureStore, Figure
 from IO import fcs
 from error import UnknownFileType 
 
@@ -107,7 +107,7 @@ def strID(methodID):
 
 #from IO.dbdict import dbopen
 import shelve
-def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
+def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, selectedAxes, grid):
     """
     Save a representation of the system state: All the loaded data sets, 
     their clusterings, any transformations or analyses (future), 
@@ -133,6 +133,8 @@ def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
                   in the project
     @type currentPlotID: int
     @param currentPlotID: The list index of the currently selected Subplot
+    @type figures: list
+    @param figures: A list of the Figure instances 
     @type selectedAxes: tuple
     @param selectedAxes: An n-tuple listing the currently selected plot axes
     @type grid: tuple
@@ -174,6 +176,10 @@ def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
             store[cStr] = csett
             bindata[cStr] = fdata.clustering[cID]
     
+
+    
+    #TODO: fix this so the passed-in plots are copied under the figure that's marked as the current
+    
     # plots
     splots = []
     for plot in plots:
@@ -183,8 +189,20 @@ def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
         store[pStr] = dict(d) 
         splots.append(pStr)
         
-    store['plots'] = list(splots)
+    store['plots'] = list(splots) 
+    
+
+    #TODO: store the Subplots in the Figures as above
+
+    # figures
+    sfigs = []
+    for fig in figures:
+        fStr = 'f%i' % fig.ID
+        store[pStr] = dict(fig.__dict__)
+        sfigs.append(pStr)
         
+    store['figures'] = list(sfigs)
+
     # other
     store['current-data'] = DataStore.getCurrentIndex()
     store['current-subplot'] = currentPlotID
@@ -197,6 +215,8 @@ def saveState(dir, filename, plots, currentPlotID, selectedAxes, grid):
     np.savez(os.path.join(dir, binfile), **bindata)
     
 
+
+#TODO: Load Figures properly
 def loadState(dir, filename):
     """
     Restore the system state as stored to disk.
@@ -248,10 +268,15 @@ def loadState(dir, filename):
     for pStr in store['plots']:
         plots.append(store[pStr])
         
+    # Figures
+    figures = []
+    for fStr in store['figures']:
+        figures.append(store[fStr])
+        
         
     DataStore.selectDataSet(store['current-data'])
                 
-    return plots, store['current-subplot'], store['selected-axes'], store['grid']
+    return figures, plots, store['current-subplot'], store['selected-axes'], store['grid']
         
 
 #TODO: remove this and the associated menu item...replace with save/load above 
