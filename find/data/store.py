@@ -396,7 +396,7 @@ class FigureStore(object):
 
 
 class Figure(object):
-    def __init__(self, name, subplots, grid, axes):
+    def __init__(self, name='', subplots=[], grid=(), axes=()):
         self.ID = id
         self.name = name
         self.subplots = subplots
@@ -404,6 +404,16 @@ class Figure(object):
         self.axes = axes
         
         
+    def load(self, attrs):
+        """
+        Assign values to each of the private members using the 
+        attributes for a Figure instance from a saved project file.
+        
+        @type attrs: dict
+        @param attrs: The __dict__ copied from a Figure instances                              
+        """
+        for key in attrs:
+            self.__dict__[key] = attrs[key]
         
         
         
