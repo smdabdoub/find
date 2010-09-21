@@ -26,7 +26,7 @@ class DataStore(object):
         pass
     
     @classmethod
-    def add(cls, data, id=None):
+    def add(cls, data):
         """
         Adds a FacsData instance to the store.
         
@@ -34,7 +34,7 @@ class DataStore(object):
         @param data: The new dataset to include in the store.
         """
         # set the ID for the data set
-        if id is None:
+        if data.ID is None:
             if cls._facsData:
                 data.ID = cls.sortData()[-1][0] + 1
             else:
@@ -332,10 +332,11 @@ class FigureStore(object):
         @param data: The new Figure to include in the store.
         """
         # set the ID for the figure
-        if cls._figures:
-            figure.ID = cls.sort()[-1][0] + 1
-        else:
-            figure.ID = 0
+        if figure.ID is None:
+            if cls._figures:
+                figure.ID = cls.sort()[-1][0] + 1
+            else:
+                figure.ID = 0
         
         # add to the store 
         cls._figures[figure.ID] = figure
@@ -394,12 +395,13 @@ class FigureStore(object):
         return sorted(cls._figures.iteritems(), key=itemgetter(0))
 
 
-
+#TODO: add selectedSubplot everywhere else for Figures
 class Figure(object):
-    def __init__(self, name='', subplots=[], grid=(), axes=()):
-        self.ID = id
+    def __init__(self, name='', subplots=[], selectedSubplot=None, grid=(), axes=()):
+        self.ID = None
         self.name = name
         self.subplots = subplots
+        self.selectedSubplot = selectedSubplot
         self.grid = grid
         self.axes = axes
         
