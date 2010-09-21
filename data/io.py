@@ -105,7 +105,7 @@ def strID(methodID):
                 return methods[id][0]
 
 
-#from IO.dbdict import dbopen
+
 import shelve
 def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, selectedAxes, grid):
     """
@@ -179,13 +179,14 @@ def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, sel
     
     # figures
     sfigs = []
-    for fig in figures:
-        fStr = 'f%i' % fig.ID
+    for figID in figures:
+        fig = figures[figID]
+        fStr = 'f%i' % figID
         d = dict(fig.__dict__)
-        if fig.ID == currentFigureID:  # copy displayed plots to current Figure
-            splots = packSubplots(store, fig.ID, plots)
+        if figID == currentFigureID:  # copy displayed plots to current Figure
+            splots = packSubplots(store, figID, plots)
         else:
-            splots = packSubplots(store, fig.ID, fig.subplots)
+            splots = packSubplots(store, figID, fig.subplots)
         
         d['subplots'] = splots
         store[fStr] = d
@@ -196,6 +197,7 @@ def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, sel
 
     # other
     store['current-data'] = DataStore.getCurrentIndex()
+    store['current-figure'] = currentFigureID
     store['current-subplot'] = currentPlotID
     store['selected-axes'] = selectedAxes
     store['grid'] = grid
@@ -252,22 +254,25 @@ def loadState(dir, filename):
             fdata.clusteringSelDims[cID] = csett['clusteringSelDims']
             fdata.infoExpanded[cID] = csett['infoExpanded']
         
-        DataStore.add(fdata, dID)
-
-    # Subplots
-    plots = []
-    for pStr in store['plots']:
-        plots.append(store[pStr])
-        
-    # Figures
-    figures = []
-    for fStr in store['figures']:
-        figures.append(store[fStr])
-        
+        DataStore.add(fdata)
         
     DataStore.selectDataSet(store['current-data'])
-                
-    return figures, plots, store['current-subplot'], store['selected-axes'], store['grid']
+
+    # Figures
+    for fStr in store['figures']:
+        fDict = store[fStr]
+        splots = []
+        for pStr in fDict['subplots']:
+            splots.append(store[pStr])
+        fDict['subplots'] = splots
+        f = Figure()
+        f.load(fDict)
+        FigureStore.add(f)
+        
+    FigureStore.setSelectedFigure(store['current-figure'])
+
+
+    return store['current-subplot'], store['selected-axes'], store['grid']
         
 
 
@@ -278,8 +283,9 @@ def packSubplots(store, figID, plots):
     for plot in plots:
         pStr = 'fig-%i-p%i' % (figID, plot.n)
         d = dict(plot.__dict__)
-        d['axes'] = None
-        store[pStr] = dict(d) 
+        d['axes'] = None    # the matplotlib axes object
+        d['parent'] = None  # a ref to the matplotlib Figure object
+        store[pStr] = d 
         splots.append(pStr)
 
     return splots
