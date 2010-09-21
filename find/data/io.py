@@ -176,30 +176,21 @@ def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, sel
             store[cStr] = csett
             bindata[cStr] = fdata.clustering[cID]
     
-
     
-    #TODO: fix this so the passed-in plots are copied under the figure that's marked as the current
-    
-    # plots
-    splots = []
-    for plot in plots:
-        pStr = 'p%i' % plot.n
-        d = dict(plot.__dict__)
-        d['axes'] = None
-        store[pStr] = dict(d) 
-        splots.append(pStr)
-        
-    store['plots'] = list(splots) 
-    
-
-    #TODO: store the Subplots in the Figures as above
-
     # figures
     sfigs = []
     for fig in figures:
         fStr = 'f%i' % fig.ID
-        store[pStr] = dict(fig.__dict__)
-        sfigs.append(pStr)
+        d = dict(fig.__dict__)
+        if fig.ID == currentFigureID:  # copy displayed plots to current Figure
+            splots = packSubplots(store, fig.ID, plots)
+        else:
+            splots = packSubplots(store, fig.ID, fig.subplots)
+        
+        d['subplots'] = splots
+        store[fStr] = d
+        
+        sfigs.append(fStr)        
         
     store['figures'] = list(sfigs)
 
@@ -279,32 +270,19 @@ def loadState(dir, filename):
     return figures, plots, store['current-subplot'], store['selected-axes'], store['grid']
         
 
-#TODO: remove this and the associated menu item...replace with save/load above 
-def exportClustering(path, fdata, cID):
-    """
-    Store the specified clustering to disk in an easily retrievable, human
-    readable format.
-    
-    @type path: string
-    @param path: the path and filename at which to store the data
-    @type fdata: FacsData
-    @param fdata: the dataset that the clustering is of
-    @type cID: int
-    @param cID: The ID of the desired clustering to export 
-    """
-    with open(path, 'w') as clust:
-        method = fdata.methodIDs[cID]
-        opts = str(fdata.clusteringOpts[cID])
-        # header: filename, number of events, clustering method and options
-        clust.write('file:%s\nevents:%i\nmethodID:%i\noptions:%s\n' % 
-                    (fdata.filename, len(fdata.data), method, opts))
-        # write the cluster assignments
-        for item in fdata.clustering[cID]:
-            clust.write('%i\n' % item)
+
          
 
+def packSubplots(store, figID, plots):
+    splots = []
+    for plot in plots:
+        pStr = 'fig-%i-p%i' % (figID, plot.n)
+        d = dict(plot.__dict__)
+        d['axes'] = None
+        store[pStr] = dict(d) 
+        splots.append(pStr)
 
-
+    return splots
 
 
 
