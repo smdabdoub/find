@@ -230,6 +230,14 @@ class MainWindow(wx.Frame):
             self.dataSelectors[i].SetItems(labels)
             if len(labels) >= len(self.dataSelectors):
                 self.dataSelectors[i].SetSelection(selectedAxes[i])
+                
+    
+    def selectAxes(self, axes=(0,1)):
+        """
+        Set which items in the axes combo boxes are selected
+        """
+        for i in range(len(self.dataSelectors)):
+            self.dataSelectors[i].SetSelection(axes[i])
         
     
     def setSelectedPlotStatus(self, status):
@@ -490,7 +498,7 @@ class MainWindow(wx.Frame):
             
         dlg.Destroy()
             
-    #TODO: Load Figures correctly
+
     def OnLoadState(self, event):
         from data.io import loadState
         
@@ -505,8 +513,20 @@ class MainWindow(wx.Frame):
         formats = "FIND Project File (*.find)|*.find"
         dlg = wx.FileDialog(self, "Select saved project", self.dirname, "", formats, wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
-            subplotDicts, currSubplot, selectedAxes, grid = loadState(dlg.Directory, dlg.Filename)
-            self.facsPlotPanel.loadSavedPlots(subplotDicts, currSubplot)
+            currSubplot, selectedAxes, grid = loadState(dlg.Directory, dlg.Filename)
+            # Load all Figures with Subplot instances from the stored dicts
+            for fID in FigureStore.getFigures():
+                fig = FigureStore.get(fID)
+                splots = []
+                for plot in fig.subplots:
+                    s = dv.Subplot()
+                    s.load(plot)
+                    s.parent = self.facsPlotPanel.figure
+                    splots.append(s)
+                fig.subplots = splots
+            
+            self.facsPlotPanel.subplots = FigureStore.getSelectedFigure().subplots
+            self.facsPlotPanel.SelectedSubplotIndex = currSubplot
             self.facsPlotPanel.updateAxes(selectedAxes, False)
             self.facsPlotPanel.updateSubplotGrid(grid[0], grid[1], True)
             self.chkLinked.Value = self.facsPlotPanel.CurrentSubplotLinked
