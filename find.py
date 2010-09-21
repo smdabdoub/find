@@ -516,19 +516,7 @@ class MainWindow(wx.Frame):
             self.statusbar.SetStatusText("Project loaded from %s" % dlg.Path, 0)
         
         dlg.Destroy()
-            
-        
-    #TODO: Remove this
-    def OnExportClustering(self, event):
-        dlg = wx.FileDialog(self, "Export selected clustering to file", "", "", "*.clst", wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
-        if dlg.ShowModal() == wx.ID_OK:
-            if not '.clst' in dlg.Path:
-                dlg.Path = dlg.Path + '.clst'
-            
-            fdata = DataStore.getCurrentDataSet()
-            io.exportClustering(dlg.Path, fdata, fdata.selectedClustering)
-        
-        dlg.Destroy()
+
     
     # Cluster Menu
     def OnCluster(self, event):
