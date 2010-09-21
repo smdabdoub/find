@@ -163,7 +163,7 @@ class FacsPlotPanel(PlotPanel):
         # when the selected subplot is deleted, there is no longer a selection
         self.SelectedSubplotIndex = None
         
-    #TODO: remove subplots associated with children
+
     def deleteAssociatedSubplots(self, ids):
         """
         Delete any subplots associated with the specified data or clustering ids
@@ -214,24 +214,6 @@ class FacsPlotPanel(PlotPanel):
             self.SelectedSubplotIndex = len(self.subplots)
         else:
             self.SelectedSubplotIndex = None
-                        
-    
-    def loadSavedPlots(self, subplotDicts, currentSubplot):
-        """
-        Create a new list of Subplot instances from the settings loaded
-        from a saved project file.
-        
-        @type subplotDicts: list of dicts
-        @param subplotDicts: A list containing the __dict__ copied from each
-                             of the existing Subplot instances at export
-        @type currentSubplot: int
-        @param currentSubplot: The index of the current subplot
-        """
-        self.subplots = [Subplot() for _ in subplotDicts]
-        for i, subplot in enumerate(self.subplots):
-            subplot.load(subplotDicts[i])
-        
-        self.SelectedSubplotIndex = currentSubplot
             
     
     def plotData(self, dataID, clusterID=None, plotType=pmethods.ID_PLOTS_SCATTER_2D):
