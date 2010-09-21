@@ -204,6 +204,7 @@ class FacsTreeCtrlPanel(wx.Panel):
                     currFig = FigureStore.getSelectedFigure()
                     newFig = FigureStore.get(item[1])
                     switchFigures(self.Parent.TopLevelParent.facsPlotPanel, currFig, newFig, True)
+                    self.Parent.TopLevelParent.selectAxes(newFig.axes)
                     FigureStore.setSelectedFigure(item[1])
         
     
