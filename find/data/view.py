@@ -553,17 +553,20 @@ class Subplot(object):
 # Module methods
 def switchFigures(panel, currFigure, newFigure, redraw=False):
     # Save existing plots to current Figure
-    currFigure.subplots = panel.subplots
-    currFigure.grid = panel.Grid
-    currFigure.axes = panel.SelectedAxes
+    saveToFigure(panel, currFigure)
     # Replace current with new
     panel.subplots = newFigure.subplots
     panel.updateSubplotGrid(newFigure.grid[0], newFigure.grid[1], False)
     panel.updateAxes(newFigure.axes, redraw)
     
     
-    
-    
+def saveToFigure(panel, figure):    
+    """
+    Save existing plots to a given Figure
+    """
+    figure.subplots = panel.subplots
+    figure.grid = panel.Grid
+    figure.axes = panel.SelectedAxes
     
     
     
