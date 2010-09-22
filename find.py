@@ -486,14 +486,8 @@ class MainWindow(wx.Frame):
                 dlg.Filename = dlg.Filename + '.find'
                 dlg.Path = dlg.Path + '.find'
             
-            try:
-                selectedAxes = self.facsPlotPanel.SelectedAxes
-            except AttributeError:
-                selectedAxes = (None, None)
-            saveState(dlg.Directory, dlg.Filename, FigureStore.getFigures(), 
-                      FigureStore.getSelectedIndex(), self.facsPlotPanel.subplots, 
-                      self.facsPlotPanel.SelectedSubplotIndex, selectedAxes, 
-                      self.facsPlotPanel.Grid)
+            dv.saveToFigure(self.facsPlotPanel, FigureStore.getSelectedFigure())
+            saveState(dlg.Directory, dlg.Filename)
             self.statusbar.SetStatusText("Project saved to %s" % dlg.Path, 0)
             
         dlg.Destroy()
@@ -513,7 +507,7 @@ class MainWindow(wx.Frame):
         formats = "FIND Project File (*.find)|*.find"
         dlg = wx.FileDialog(self, "Select saved project", self.dirname, "", formats, wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
-            currSubplot, selectedAxes, grid = loadState(dlg.Directory, dlg.Filename)
+            loadState(dlg.Directory, dlg.Filename)
             # Load all Figures with Subplot instances from the stored dicts
             for fID in FigureStore.getFigures():
                 fig = FigureStore.get(fID)
@@ -525,13 +519,14 @@ class MainWindow(wx.Frame):
                     splots.append(s)
                 fig.subplots = splots
             
-            self.facsPlotPanel.subplots = FigureStore.getSelectedFigure().subplots
-            self.facsPlotPanel.SelectedSubplotIndex = currSubplot
-            self.facsPlotPanel.updateAxes(selectedAxes, False)
-            self.facsPlotPanel.updateSubplotGrid(grid[0], grid[1], True)
+            currFigure = FigureStore.getSelectedFigure()
+            self.facsPlotPanel.subplots = currFigure.subplots
+            self.facsPlotPanel.SelectedSubplotIndex = currFigure.selectedSubplot
+            self.facsPlotPanel.updateAxes(currFigure.axes, False)
+            self.facsPlotPanel.updateSubplotGrid(currFigure.grid[0], currFigure.grid[1], True)
             self.chkLinked.Value = self.facsPlotPanel.CurrentSubplotLinked
             labels = DataStore.getCurrentDataSet().labels if DataStore.getCurrentDataSet() is not None else []
-            self.updateAxesList(labels, selectedAxes)
+            self.updateAxesList(labels, currFigure.axes)
             self.treeCtrlPanel.updateTree()
             self.statusbar.SetStatusText("Project loaded from %s" % dlg.Path, 0)
         
