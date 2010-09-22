@@ -107,7 +107,7 @@ def strID(methodID):
 
 
 import shelve
-def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, selectedAxes, grid):
+def saveState(dir, filename):
     """
     Save a representation of the system state: All the loaded data sets, 
     their clusterings, any transformations or analyses (future), 
@@ -119,26 +119,12 @@ def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, sel
     binfile: the filename of the binary file used to store all the actual data
     data-dID: dict of settings belonging to a FacsData instance
     clust-dID-cID: a dict of attributes belonging to a clustering
-    plots: list of plot IDs
-    ppID: dict of 
-    current-data: dID
-    current-subplot: pID
-    
-    @type dir: str
-    @param dir: The directory under which to save the project
-    @type filename: str
-    @param filename: The filename to be associated with the save files
-    @type plots: list
-    @param plots: A list containing the Subplot instances currently 
-                  in the project
-    @type currentPlotID: int
-    @param currentPlotID: The list index of the currently selected Subplot
-    @type figures: list
-    @param figures: A list of the Figure instances 
-    @type selectedAxes: tuple
-    @param selectedAxes: An n-tuple listing the currently selected plot axes
-    @type grid: tuple
-    @param grid: rows x columns in the main figure (grid size)
+    figures: list of figureID strings
+    fig-ID: A dict for each figure keyed on the ID. The subplot attribute here 
+          is replaced with a list of fig-ID-p-ID strings for locating subplot dicts
+    fig-ID-p-ID: A dict for each subplot in each figure keyed on fig ID and plot ID.
+    current-data: data ID
+    current-figure: figure ID
     """ 
     store = shelve.open(os.path.join(dir, filename))
     #store = dbopen(os.path.join(dir, filename), 'c', format='csv')
@@ -151,7 +137,7 @@ def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, sel
     store['binfile'] = binfile
     for dID in DataStore.getData():
         fdata = DataStore.get(dID)
-        dStr = 'data-%s' % dID
+        dStr = 'data-%i' % dID
         dfname = fdata.filename if (fdata.filename is not '') else binfile
         bindata[dStr] = fdata.data
         store[dStr] = {'filename':     dfname,
@@ -179,28 +165,20 @@ def saveState(dir, filename, figures, currentFigureID, plots, currentPlotID, sel
     
     # figures
     sfigs = []
-    for figID in figures:
-        fig = figures[figID]
-        fStr = 'f%i' % figID
+    for figID in FigureStore.getFigures():
+        fig = FigureStore.get(figID)
+        fStr = 'fig-%i' % figID
         d = dict(fig.__dict__)
-        if figID == currentFigureID:  # copy displayed plots to current Figure
-            splots = packSubplots(store, figID, plots)
-        else:
-            splots = packSubplots(store, figID, fig.subplots)
-        
+        splots = packSubplots(store, figID, fig.subplots)
         d['subplots'] = splots
         store[fStr] = d
-        
         sfigs.append(fStr)        
         
     store['figures'] = list(sfigs)
 
     # other
     store['current-data'] = DataStore.getCurrentIndex()
-    store['current-figure'] = currentFigureID
-    store['current-subplot'] = currentPlotID
-    store['selected-axes'] = selectedAxes
-    store['grid'] = grid
+    store['current-figure'] = FigureStore.getSelectedIndex()
     
     # write out settings data
     store.close()
@@ -259,21 +237,28 @@ def loadState(dir, filename):
     DataStore.selectDataSet(store['current-data'])
 
     # Figures
-    for fStr in store['figures']:
-        fDict = store[fStr]
-        splots = []
-        for pStr in fDict['subplots']:
-            splots.append(store[pStr])
-        fDict['subplots'] = splots
-        f = Figure()
-        f.load(fDict)
-        FigureStore.add(f)
+    if 'figures' in store:
+        for fStr in store['figures']:
+            fDict = store[fStr]
+            splots = []
+            for pStr in fDict['subplots']:
+                splots.append(store[pStr])
+            fDict['subplots'] = splots
+            f = Figure()
+            f.load(fDict)
+            FigureStore.add(f)
+            
+    # handle older save files w/o Figure support
+    else:
+        # load the saved subplots into a new 'Default' Figure
+        plots = []
+        for pStr in store['plots']:
+            plots.append(store[pStr])
+        defFig = Figure('Default', plots, store['current-subplot'], store['grid'], store['selected-axes'])
+        FigureStore.add(defFig)
+
         
     FigureStore.setSelectedFigure(store['current-figure'])
-
-
-    return store['current-subplot'], store['selected-axes'], store['grid']
-        
 
 
          
