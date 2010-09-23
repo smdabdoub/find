@@ -12,7 +12,7 @@ from display.contextmenus import SubplotPopupMenu
 from display.dialogs import EditNameDialog
 import plot.methods as pmethods
 import plot.dialogs as pdialogs
-from store import DataStore
+from store import DataStore, FigureStore
 
 # 3rd Party imports
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -170,19 +170,36 @@ class FacsPlotPanel(PlotPanel):
         
         @type ids: tuple
         @param ids: A tuple containing either a data ID and a clustering ID 
-                    or just a data ID.
+                    or a data ID and None.
         """
-        toDelete = []
-        for n, subplot in enumerate(self.subplots):
-            if (subplot.dataIndex == ids[0]): 
-                if ids[1] is None:
-                    toDelete.append(n)
-                elif (ids[1] is not None) and (subplot.clustIndex == ids[1]):
-                    toDelete.append(n)
-        
-        # delete flagged subplots by creating a new list w/o the deleted indices
-        self.subplots = [self.subplots[i] for i in range(len(self.subplots)) if not (i in toDelete)]
-        self.renumberPlots()
+        all, figPlots = [ids[0]], {None: self.subplots}
+        if ids[1] is None:
+            DataStore.get(ids[0]).collectAllChildren(all)
+
+        # add subplot lists from figures in the store
+        for fID, fig in FigureStore.getFigures().items():
+            if fID != FigureStore.getSelectedIndex():
+                figPlots[fID] = fig.subplots
+            
+        # remove matching subplots from all figures
+        for fID, plots in figPlots.items():
+            toDelete = []
+            for n, subplot in enumerate(plots):
+                if (subplot.dataIndex in all):
+                    if ids[1] is None:
+                        toDelete.append(n)
+                    else: 
+                        if subplot.clustIndex == ids[1]:
+                            toDelete.append(n)
+            
+            # delete flagged subplots by creating a new list w/o the deleted indices
+            plots = [plots[i] for i in range(len(plots)) if not (i in toDelete)]
+            if fID is None:
+                self.subplots = plots
+            else:
+                FigureStore.get(fID).subplots = plots
+            
+            self.renumberPlots(fID)
         
         self.draw()
         
@@ -201,19 +218,28 @@ class FacsPlotPanel(PlotPanel):
         titleDlg.Destroy()
         
 
-    def renumberPlots(self):
+    def renumberPlots(self, figureID=None):
         """ 
         Renumber the subplots and their titles by their position in the list
         beginning with 1.
         """
-        for n, subplot in enumerate(self.subplots):
+        fig = None, None
+        if figureID is None:
+            fig = self
+        else:
+            fig = FigureStore.get(figureID)
+            
+        # renumber
+        for n, subplot in enumerate(fig.subplots):
             subplot.n = n+1
             subplot.Title = subplot.Title.split(': ')[1]
         
-        if (len(self.subplots) > 0):
-            self.SelectedSubplotIndex = len(self.subplots)
+        # set selected subplot
+        ss = len(fig.subplots) if (len(fig.subplots) > 0) else None
+        if figureID is None:
+            self.SelectedSubplotIndex = ss
         else:
-            self.SelectedSubplotIndex = None
+            fig.selectedSubplot = ss
             
     
     def plotData(self, dataID, clusterID=None, plotType=pmethods.ID_PLOTS_SCATTER_2D):
@@ -556,6 +582,7 @@ def switchFigures(panel, currFigure, newFigure, redraw=False):
     saveToFigure(panel, currFigure)
     # Replace current with new
     panel.subplots = newFigure.subplots
+    panel.SelectedSubplotIndex = newFigure.selectedSubplot
     panel.updateSubplotGrid(newFigure.grid[0], newFigure.grid[1], False)
     panel.updateAxes(newFigure.axes, redraw)
     
@@ -565,6 +592,7 @@ def saveToFigure(panel, figure):
     Save existing plots to a given Figure
     """
     figure.subplots = panel.subplots
+    figure.selectedSubplot = panel.SelectedSubplotIndex
     figure.grid = panel.Grid
     figure.axes = panel.SelectedAxes
     
