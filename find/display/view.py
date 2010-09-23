@@ -271,7 +271,8 @@ class FacsTreeCtrlPanel(wx.Panel):
             return
         
         if item[0] is DATA_SET_ITEM:
-            self.Parent.TopLevelParent.facsPlotPanel.deleteAssociatedSubplots()
+            ids = (item[1], None) if len(item) < 3 else (item[1], item[2])
+            self.Parent.TopLevelParent.facsPlotPanel.deleteAssociatedSubplots(ids)
             self.applyToSelection(DataStore.remove, FacsData.removeClustering)
             # if all data deleted, clear axes selectors
             if len(DataStore.getData()) == 0:
@@ -335,7 +336,7 @@ class FacsTreeCtrlPanel(wx.Panel):
                 elif len(item) == 3:
                     self.Parent.PopupMenu(DataTreePopupMenu(self, dataItem=False), pt)
             
-            if item[1] is FIGURE_SET_ITEM:
+            if item[0] is FIGURE_SET_ITEM:
                 self.Parent.PopupMenu(FigureTreePopupMenu(self), pt) 
 
 
