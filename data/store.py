@@ -217,7 +217,13 @@ class FacsData(object):
         
         self.selectedClustering = None
         
-    
+        
+    def collectAllChildren(self, allChildren):
+        allChildren.extend(self.children)
+        for cID in self.children:
+            DataStore.get(cID).collectAllChildren(allChildren)
+        
+           
     def getDefaultTransform(self, dim=0):
         """
         Retrieves (if available) the amplification method (linear or log) 
@@ -316,6 +322,8 @@ class Clustering(object):
         self.selDims = dims
         
         
+
+
         
         
 class FigureStore(object):
@@ -395,7 +403,6 @@ class FigureStore(object):
         return sorted(cls._figures.iteritems(), key=itemgetter(0))
 
 
-#TODO: add selectedSubplot everywhere else for Figures
 class Figure(object):
     def __init__(self, name='', subplots=[], selectedSubplot=None, grid=(), axes=()):
         self.ID = None
