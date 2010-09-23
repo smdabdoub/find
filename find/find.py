@@ -454,7 +454,7 @@ class MainWindow(wx.Frame):
                 self.facsPlotPanel.updateSubplotGrid(int(math.ceil(numLoaded/2.0)), 2)
             self.statusbar.SetStatusText('All data files loaded.')
                
-            fig = Figure('Default', self.facsPlotPanel.subplots, 
+            fig = Figure('Default', self.facsPlotPanel.subplots, 1,
                          self.facsPlotPanel.Grid, 
                          self.facsPlotPanel.SelectedAxes)
             FigureStore.add(fig)
@@ -614,7 +614,7 @@ class MainWindow(wx.Frame):
     def OnAddFigure(self, event):
         nameDlg = displayDialogs.EditNameDialog(self, '')
         if (nameDlg.ShowModal() == wx.ID_OK):
-            newFig = Figure(nameDlg.Text, [], (1,1), (0,1))
+            newFig = Figure(nameDlg.Text, [], 1, (1,1), (0,1))
             currFig = FigureStore.getSelectedFigure() 
             FigureStore.add(newFig)
             dv.switchFigures(self.facsPlotPanel, currFig, newFig)
@@ -622,7 +622,7 @@ class MainWindow(wx.Frame):
     
             self.treeCtrlPanel.updateTree()   
 
-        nameDlg.Destroy()    
+        nameDlg.Destroy()
     
     
     
