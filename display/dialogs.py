@@ -87,23 +87,25 @@ class SampleDataDisplayDialog(wx.Dialog):
     rearrange and rename the columns
     """
     
-    def __init__(self, parent, data, labels):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Sample Data Display', style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(450, 300))
+    def __init__(self, parent, data, labels, title='Sample Data Display', applyAll=True, enableColMoving=True):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, title, style=wx.RESIZE_BORDER|wx.DEFAULT_DIALOG_STYLE, size=(450, 300))
         self.CenterOnParent()
         
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.dataGrid = DataGrid(self, data, labels)
-        self.chkApplyToAll = wx.CheckBox(self, wx.ID_ANY, 'Apply to all files')
+        self.dataGrid = DataGrid(self, data, labels, enableColMoving=enableColMoving)
+        if applyAll:
+            self.chkApplyToAll = wx.CheckBox(self, wx.ID_ANY, 'Apply to all files')
         
         self.sizer.Add(self.dataGrid, 1, wx.EXPAND)
-        self.sizer.AddSpacer(10)
-        self.sizer.Add(self.chkApplyToAll, 0, wx.EXPAND | wx.LEFT, 10)
+        if applyAll:
+            self.sizer.AddSpacer(10)
+            self.sizer.Add(self.chkApplyToAll, 0, wx.EXPAND | wx.LEFT, 10)
         self.sizer.AddSpacer(5)
         self.sizer.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0, wx.EXPAND)
         self.sizer.AddSpacer(5)
         
         self.SetSizer(self.sizer)
-    
+        
     @property
     def ColumnsMoved(self):
         return self.dataGrid.colsMoved
