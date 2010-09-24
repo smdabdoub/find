@@ -258,7 +258,10 @@ def loadState(dir, filename):
         FigureStore.add(defFig)
 
         
-    FigureStore.setSelectedFigure(store['current-figure'])
+    if 'current-figure' in store:
+        FigureStore.setSelectedFigure(store['current-figure'])
+    else:
+        FigureStore.setSelectedFigure(0)
 
 
          
