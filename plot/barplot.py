@@ -10,6 +10,8 @@ import methods
 import numpy.numarray as na
 from data.store import DataStore
 
+viewOptsStr = ['Percentage', 'Percentage relative to top-level parent', 'Event Counts']
+viewOpts = ['percent', 'toplevel', 'counts']
 
 def barplot(subplot, figure, dims=None):
     """
@@ -25,26 +27,38 @@ def barplot(subplot, figure, dims=None):
     opts = subplot.opts
     if len(opts) == 0:
         opts['labelAngle'] = 0 if len(clusters) < 5 else -20
-        opts['toplevelPercent'] = False
+        opts['view'] = 'percent'
+    # correcting for previous version
+    if 'view' not in opts:
+        opts['view'] = 'percent'
     
     dataSize = len(subplot.Data)
-    if opts['toplevelPercent']:
+    if opts['view'] == 'toplevel':
         dataSize = len(DataStore.getToplevelParent(subplot.dataIndex).data)
     
-    percents = [float(len(cluster))/dataSize*100 for cluster in clusters]
-    numBars = len(percents)
+    if opts['view'] in ['percent', 'toplevel']:
+        displayNums = [float(len(cluster))/dataSize*100 for cluster in clusters]
+    else:
+        displayNums = [len(cluster) for cluster in clusters]
+        
+    numBars = len(displayNums)
     width = 0.5
     
-    xlocs = na.array(range(len(percents)))+0.5
+    xlocs = na.array(range(len(displayNums)))+0.5
 
     subplot.axes = figure.add_subplot(subplot.mnp, title=subplot.Title, autoscale_on=False)
     subplot.axes.set_xticks(xlocs + width/2)
-    subplot.axes.set_xticklabels(map(lambda x: "%.2f%%" % x, percents), rotation=opts['labelAngle'])
+    if opts['view'] == 'counts':
+        subplot.axes.set_xticklabels(map(lambda x: "%i" % x, displayNums), rotation=opts['labelAngle'])
+        subplot.axes.set_ylim(0, max(displayNums)*1.2)
+    else:
+        subplot.axes.set_xticklabels(map(lambda x: "%.2f%%" % x, displayNums), rotation=opts['labelAngle'])
+        subplot.axes.set_ylim(0, 100)
+        
+    subplot.axes.set_xlim(0, xlocs[-1] + width*2)
     subplot.axes.xaxis.tick_bottom()
     subplot.axes.yaxis.tick_left()
-    subplot.axes.set_xlim(0, xlocs[-1] + width*2)
-    subplot.axes.set_ylim(0, 100)
-    subplot.axes.bar(xlocs, percents, width=width, color=methods.plotColors[:numBars])
+    subplot.axes.bar(xlocs, displayNums, width=width, color=methods.plotColors[:numBars])
     
     
     
@@ -84,7 +98,10 @@ class BarplotOptionsPanel(OptionsDialogPanel):
 
         # Init controls
         self.txtLabelAngle = wx.TextCtrl(self, wx.ID_ANY, size=(80,20))
-        self.chkTopLevelPct = wx.CheckBox(self, wx.ID_ANY, 'Display percentages relative to top-level data')
+        self.cbxView = wx.ComboBox(self, choices=viewOptsStr, style=wx.CB_READONLY)
+        viewBox = wx.BoxSizer(wx.HORIZONTAL)
+        viewBox.Add(wx.StaticText(self, wx.ID_ANY, 'View:'), 0, wx.EXPAND|wx.ALIGN_RIGHT)
+        viewBox.Add(self.cbxView, 1, wx.EXPAND)
 
         # Layout
         mainSizer = wx.BoxSizer()
@@ -94,7 +111,7 @@ class BarplotOptionsPanel(OptionsDialogPanel):
         # Sizer
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
         self.Sizer.Add(mainSizer, 0, wx.ALIGN_CENTER)
-        self.Sizer.Add(self.chkTopLevelPct, 0, wx.ALIGN_CENTER)
+        self.Sizer.Add(viewBox, 0, wx.ALIGN_CENTER)
 
 
 
@@ -106,7 +123,8 @@ class BarplotOptionsPanel(OptionsDialogPanel):
         :@param opts: A dict of plot settings.
         """
         self.txtLabelAngle.Value = str(opts['labelAngle'])
-        self.chkTopLevelPct.Value = opts['toplevelPercent']
+        
+        self.cbxView.StringSelection = viewOptsStr[viewOpts.index(opts['view'])]
 
     
     def validate(self):
@@ -127,7 +145,7 @@ class BarplotOptionsPanel(OptionsDialogPanel):
     def Options(self):
         options = {}
         options['labelAngle'] = int(self.txtLabelAngle.Value)
-        options['toplevelPercent'] = self.chkTopLevelPct.Value
+        options['view'] = viewOpts[self.cbxView.GetSelection()]
         return options
 
 
