@@ -23,6 +23,7 @@ from wx.lib.wordwrap import wordwrap
 
 # System imports
 import math
+from operator import itemgetter
 import sys
 import traceback
 
@@ -39,7 +40,7 @@ ID_PLOTS_EXPORT  = wx.NewId()
 ID_PLOTS_ADD_FIG = wx.NewId()
 
 # Data Menu
-ID_DATA_ISOLATE = wx.NewId()
+ID_DATA_EDIT_LABELS = wx.NewId()
 ID_DATA_RECOLOR = wx.NewId()
 
 # Controls
@@ -162,6 +163,10 @@ class MainWindow(wx.Frame):
         
         # Data menu
         self.dataMenu = wx.Menu()
+        self.dataMenu.Append(ID_DATA_EDIT_LABELS, 'Edit Channel Labels', 
+                               'Edit the names of the channels used for display.')
+        self.Bind(wx.EVT_MENU, self.OnEditChannelNames, id=ID_DATA_EDIT_LABELS)
+        
         self.dataMenu.Append(ID_DATA_RECOLOR, 'Recolor Clusters', 
                                'Match the cluster IDs between two clusters in order to sync their colors')
         self.Bind(wx.EVT_MENU, self.OnRecolorClusters, id=ID_DATA_RECOLOR)
@@ -649,6 +654,30 @@ class MainWindow(wx.Frame):
         
         dlg.Destroy()
     
+    
+    def OnEditChannelNames(self, event):
+        """
+        Allow users to modify the descriptors for each channel (dimension)
+        """
+        fcData = DataStore.getCurrentDataSet()
+        if fcData is not None:
+            dgridDlg = displayDialogs.SampleDataDisplayDialog(self, fcData.data[0:10,:], 
+                                                              fcData.labels, 'Edit Channel Labels',
+                                                              False, False)
+            if (dgridDlg.ShowModal() == wx.ID_OK):
+                # reassign FacsData instance labels
+                for fcd in DataStore.getData().values():
+                    labels = [item[1] for item in sorted(dgridDlg.ColumnLabels.iteritems(), key=itemgetter(0))]
+                    fcd.labels = labels
+                # update channel selection cbxs
+                self.updateAxesList(labels, self.facsPlotPanel.SelectedAxes)
+                # refresh plot window
+                self.facsPlotPanel.draw()
+                
+            dgridDlg.Destroy()
+        else:
+            wx.MessageBox("There are no data currently loaded.", "Error", wx.OK | wx.ICON_ERROR)
+        
     
     
     def OnRecolorClusters(self, event):
