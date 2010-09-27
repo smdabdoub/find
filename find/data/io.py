@@ -187,7 +187,6 @@ def saveState(dir, filename):
     
 
 
-#TODO: Load Figures properly
 def loadState(dir, filename):
     """
     Restore the system state as stored to disk.

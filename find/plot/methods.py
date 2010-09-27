@@ -61,7 +61,7 @@ def getMethod(id):
 
 def strID(methodID):
     """
-    Get the name of a plotting method by its ID.
+    Get the string identifier of a plotting method by its int ID.
     
     @type methodID: int
     @param methodID: One of the module-defined ID_* constants for the available methods.
