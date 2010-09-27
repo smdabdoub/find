@@ -13,7 +13,7 @@ def addPluginDialog(ID, dialog):
 
 
 def getPlotOptionsDialog(parent, subplot):
-    if type(subplot.plotType) is int:
+    if isinstance(subplot.plotType, int):
         subplot.plotType = methods.strID(subplot.plotType)
         
     if subplot.plotType in dialogs:
