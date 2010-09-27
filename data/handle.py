@@ -57,7 +57,7 @@ def mergeData(clusters, data):
     :@rtype: array
     :@return: A new data array containing the merged clusters.
     """
-    if type(data) is dict:
+    if isinstance(data, dict):
         rows = sum([data[i].shape[0] for i in clusters])
         cols = data[i].shape[1]
     else:

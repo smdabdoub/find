@@ -235,7 +235,7 @@ class FacsData(object):
         :@return: The amplification method used for capture. None otherwise.
         """
         if 'defXform' in self.annotations:
-            if type(self.annotations['defXform']) is list:
+            if isinstance(self.annotations['defXform'], list):
                 if dim < len(self.annotations['defXform']):
                     return self.annotations['defXform'][dim]
             else:
