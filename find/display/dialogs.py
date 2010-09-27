@@ -166,7 +166,6 @@ class DimensionExclusionDialog(wx.Dialog):
         
         
 
-#TODO: validate input
 class FigureSetupDialog(ValidatedDialog):
     """
     This dialog allows the user to specify the grid for subplots on the main figure.

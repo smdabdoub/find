@@ -67,7 +67,7 @@ def merge(limit, ids, clusters, dist=None, minpair=None, newID=None):
     :@type clusters: list
     :@param clusters: A list of arrays, each containing the 
     """
-    if (type(clusters) is not dict):
+    if not isinstance(clusters, dict):
         tmp = {}
         for i, cluster in enumerate(clusters):
             tmp[i] = cluster
