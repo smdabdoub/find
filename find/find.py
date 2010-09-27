@@ -1,4 +1,5 @@
 __all__ = ['MainWindow']
+__version__ = '0.3.0'
 
 # Local imports
 import cluster.dialogs as cDlgs
@@ -16,6 +17,7 @@ from data import io
 import error
 import plugin
 import transforms.methods as tm
+import update
 
 # 3rd party imports
 import wx
@@ -25,7 +27,7 @@ from wx.lib.wordwrap import wordwrap
 import math
 from operator import itemgetter
 import sys
-import traceback
+import traceback 
 
 # CONSTANTS
 # File Menu
@@ -42,6 +44,9 @@ ID_PLOTS_ADD_FIG = wx.NewId()
 # Data Menu
 ID_DATA_EDIT_LABELS = wx.NewId()
 ID_DATA_RECOLOR = wx.NewId()
+
+# Help Menu
+ID_HELP_UPDATE = wx.NewId()
 
 # Controls
 ID_CBX = wx.NewId()
@@ -190,9 +195,10 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnAddSubplot, id=ID_PLOTS_ADD)
         
         
-        
         # Help menu
         self.helpMenu = wx.Menu()
+        self.helpMenu.Append(ID_HELP_UPDATE, "Check for Updates"," Check for the latest version of the program.")
+        self.Bind(wx.EVT_MENU, self.OnCheckUpdate, id=ID_HELP_UPDATE)
         self.helpMenu.Append(wx.ID_ABOUT, "&About FIND"," Information about this program")
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         
@@ -697,17 +703,20 @@ class MainWindow(wx.Frame):
             
         
     # Help Menu
+    def OnCheckUpdate(self, event):
+        update.CheckForUpdate(self, __version__, self.excepthook)
+    
     def OnAbout(self, event):
         """
         Displays a simple About dialog.
         """
         info = wx.AboutDialogInfo()
         info.Name = "FIND: Flow Investigation using N-Dimensions"
-        info.Version = "0.2"
+        info.Version = __version__
         info.Copyright = "(C) Shareef M. Dabdoub"
         info.Description = wordwrap(
             "This application allows for the display, clustering, and general analysis of "
-            "n-dimensional FACS data",
+            "n-dimensional Flow Cytometry data",
             500, wx.ClientDC(self.facsPlotPanel))
         info.WebSite = ("http://justicelab.org/find", "FIND Main Site")
         info.Developers = ["Shareef M. Dabdoub"]
@@ -716,9 +725,12 @@ class MainWindow(wx.Frame):
         wx.AboutBox(info)
         
 
-    def excepthook(self, type, value, tb):
+    def excepthook(self, type, value, tb=None):
         message = 'Uncaught exception:\n'
-        message += ''.join(traceback.format_exception(type, value, tb))
+        if tb is not None:
+            message += ''.join(traceback.format_exception(type, value, tb))
+        else:
+            message += '\n'.join([type, value])
         
         sys.stderr.write('ERROR: %s\n' % str(message))
         dlg = error.ReportErrorDialog(self, str(message))
