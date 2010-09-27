@@ -254,6 +254,8 @@ class FacsPlotPanel(PlotPanel):
         @var plotType: The type of plot to be draw. Defaults to scatter plot.     
         """
         if (self.SelectedSubplotIndex is not None):
+            if isinstance(plotType, int):
+                plotType = pmethods.strID(plotType)
             self.subplots[self.SelectedSubplotIndex-1] = Subplot(self.SelectedSubplotIndex, dataID, 
                                                             clusterID, plotType, self.figure)
             self.draw()
