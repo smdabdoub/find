@@ -623,18 +623,22 @@ class MainWindow(wx.Frame):
 
 
     def OnAddFigure(self, event):
+        if len(DataStore.getData()) == 0:
+            return
+        
         nameDlg = displayDialogs.EditNameDialog(self, '')
         if (nameDlg.ShowModal() == wx.ID_OK):
-            newFig = Figure(nameDlg.Text, [], 1, (1,1), (0,1))
+            newFig = Figure(nameDlg.Text, [dv.Subplot()], 1, (1,1), (0,1))
             currFig = FigureStore.getSelectedFigure() 
             FigureStore.add(newFig)
             dv.switchFigures(self.facsPlotPanel, currFig, newFig)
+            self.facsPlotPanel.subplots = []  
             self.addSubplot()
     
             self.treeCtrlPanel.updateTree()   
 
         nameDlg.Destroy()
-    
+
     
     
     
