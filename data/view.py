@@ -10,6 +10,7 @@ This module contains classes and methods used to visualize FACS data.
 # Local imports
 from display.contextmenus import SubplotPopupMenu
 from display.dialogs import EditNameDialog
+from display.formatters import IntFormatter
 import plot.methods as pmethods
 import plot.dialogs as pdialogs
 from store import DataStore, FigureStore
@@ -120,8 +121,10 @@ class FacsPlotPanel(PlotPanel):
     def OnClick(self, event):
         try:
             if (event.inaxes is not None):
+                intVal = IntFormatter()
                 plotNum = event.inaxes.get_title().split(':')[0]
-                self.SelectedSubplotIndex = int(plotNum)
+                if intVal.validate(plotNum):
+                    self.SelectedSubplotIndex = int(plotNum)
                 
                 # Right click
                 if (event.button == 3):
