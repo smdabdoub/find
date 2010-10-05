@@ -29,31 +29,37 @@ def heatmap2d(subplot, figure, dims=None):
     
     x = subplot.Data[:, dims[0]]
     y = subplot.Data[:, dims[1]]
+    cbLabel = ''
     
     # apply transform
+    if 'transform' not in opts:
+        opts['transform'] = 'log'
     if opts['transform'] == 'log':
         x = tm.getMethod('log')(x)
         y = tm.getMethod('log')(y)
     
     
-    extent = (0, x.max(), 0, y.max())
+    extent = (0, x.max()*1.05, 0, y.max()*1.05)
     
+    cmap = CM.get_cmap(opts['colorMap'])
     if opts['type'] == 'Gaussian KDE':
         kdeGrid = fast_kde(x, y, gridsize=opts['bins'])
-        gAx = subplot.axes.imshow(kdeGrid, extent=extent, cmap=CM.get_cmap(opts['colorMap']),
+        gAx = subplot.axes.imshow(kdeGrid, extent=extent, cmap=cmap,
                             aspect='auto', interpolation='bicubic')
     
     if opts['type'] == 'Histogram':
         heatmap, xedges, yedges = np.histogram2d(x, y, bins=opts['bins'])
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-        gAx = subplot.axes.imshow(heatmap, extent=extent, cmap=CM.get_cmap(opts['colorMap']),
+        gAx = subplot.axes.imshow(heatmap, extent=extent, cmap=cmap,
                             aspect='auto')
     
     if opts['type'] == 'Hexbins':
-        gAx = subplot.axes.hexbin(x, y, gridsize=opts['bins'][0], extent=extent, mincnt=1)
+        gAx = subplot.axes.hexbin(x, y, gridsize=opts['bins'][0], extent=extent, mincnt=1, cmap=cmap)
+        cbLabel = 'Events'
         
     cb = subplot.parent.colorbar(gAx)
-    cbLabel = 'Events' if opts['transform'] != 'log' else 'log Events'
+    if cbLabel == '':
+        cbLabel = 'Events' if opts['transform'] != 'log' else 'log Events'
     cb.set_label(cbLabel)
     
 
