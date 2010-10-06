@@ -188,7 +188,7 @@ class FacsTreeCtrlPanel(wx.Panel):
                 clustFunc(DataStore.selectDataSet(data[1]), data[2])
             
             
-    def selectItemTreeSelection(self):
+    def selectItemTreeSelection(self, rightClick=False):
         """
         Using the selected tree item, set the corresponding object 
         in the data store as the current selection.
@@ -199,7 +199,7 @@ class FacsTreeCtrlPanel(wx.Panel):
             if item[0] is DATA_SET_ITEM:
                 self.applyToSelection(DataStore.selectDataSet, FacsData.selectClustering)
             
-            if item[0] is FIGURE_SET_ITEM:
+            if item[0] is FIGURE_SET_ITEM and not rightClick:
                 if item[1] != FigureStore.getSelectedIndex():
                     currFig = FigureStore.getSelectedFigure()
                     newFig = FigureStore.get(item[1])
@@ -211,7 +211,7 @@ class FacsTreeCtrlPanel(wx.Panel):
     def displayDataInfo(self):
         item = self.getSanitizedItemSelectionData()
         if item is not None and item[0] is DATA_SET_ITEM:
-            data = DataStore.get(id)
+            data = DataStore.get(item[1])
             dlg = DataInfoDialog(self.Parent, data)
             dlg.Show()
     
@@ -229,7 +229,7 @@ class FacsTreeCtrlPanel(wx.Panel):
         item = self.getSanitizedItemSelectionData()
         
         if item is not None and item[0] is DATA_SET_ITEM:
-            DataStore.get(id).selectedClustering = None
+            DataStore.get(item[1]).selectedClustering = None
             self.updateTree()
     
     def renameItem(self):
@@ -326,6 +326,7 @@ class FacsTreeCtrlPanel(wx.Panel):
         item, _ = self.tree.HitTest(pt)
         if item:
             self.tree.SelectItem(item)
+            self.selectItemTreeSelection(rightClick=True)
             item = self.getSanitizedItemSelectionData()
             if item is None:
                 return
