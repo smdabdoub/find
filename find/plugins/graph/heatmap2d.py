@@ -17,7 +17,7 @@ def heatmap2d(subplot, figure, dims=None):
     """
     opts = subplot.opts
     if len(opts) == 0:
-        opts['type'] = 'Gaussian KDE'
+        opts['type'] = 'Hexbins'
         opts['colorMap'] = 'gist_earth'
         opts['bins'] = (200, 200)
         opts['transform'] = 'log'
@@ -42,6 +42,10 @@ def heatmap2d(subplot, figure, dims=None):
     extent = (0, x.max()*1.05, 0, y.max()*1.05)
     
     cmap = CM.get_cmap(opts['colorMap'])
+    if opts['type'] == 'Hexbins':
+        gAx = subplot.axes.hexbin(x, y, gridsize=opts['bins'][0], extent=extent, mincnt=1, cmap=cmap)
+        cbLabel = 'Events'
+
     if opts['type'] == 'Gaussian KDE':
         kdeGrid = fast_kde(x, y, gridsize=opts['bins'])
         gAx = subplot.axes.imshow(kdeGrid, extent=extent, cmap=cmap,
@@ -52,10 +56,6 @@ def heatmap2d(subplot, figure, dims=None):
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
         gAx = subplot.axes.imshow(heatmap, extent=extent, cmap=cmap,
                             aspect='auto')
-    
-    if opts['type'] == 'Hexbins':
-        gAx = subplot.axes.hexbin(x, y, gridsize=opts['bins'][0], extent=extent, mincnt=1, cmap=cmap)
-        cbLabel = 'Events'
         
     cb = subplot.parent.colorbar(gAx)
     if cbLabel == '':
@@ -105,27 +105,27 @@ class Heatmap2DOptionsPanel(OptionsDialogPanel):
         self.GAUSSIAN_KDE = 'Gaussian KDE'
         self.HISTOGRAM = 'Histogram'
         self.HEXBINS = 'Hexbins'
-        types = [self.GAUSSIAN_KDE, self.HISTOGRAM, self.HEXBINS]
+        types = [self.HEXBINS]#, self.GAUSSIAN_KDE, self.HISTOGRAM]
         
         # Init controls
         self.cbxType = wx.ComboBox(self, choices=types,
                                    style=wx.CB_READONLY)
-        self.cbxType.Bind(wx.EVT_COMBOBOX, self.cbxType_Select)
+#        self.cbxType.Bind(wx.EVT_COMBOBOX, self.cbxType_Select)
         self.cbxColormap = wx.ComboBox(self, choices=collectColormaps(),
                                    style=wx.CB_READONLY)
         self.txtXBins = wx.TextCtrl(self, size=(80,20))
-        self.txtYBins = wx.TextCtrl(self, size=(80,20))
+        #self.txtYBins = wx.TextCtrl(self, size=(80,20))
 
         # Layout
-        mainSizer = wx.FlexGridSizer(4, 2, 5, 5)
+        mainSizer = wx.FlexGridSizer(3, 2, 5, 5)
         mainSizer.Add(wx.StaticText(self, wx.ID_ANY, 'Heatmap Type:'))
         mainSizer.Add(self.cbxType, 1, wx.EXPAND)
         mainSizer.Add(wx.StaticText(self, wx.ID_ANY, 'Color Map:'))
         mainSizer.Add(self.cbxColormap, 1, wx.EXPAND)
-        mainSizer.Add(wx.StaticText(self, wx.ID_ANY, "X Bins:"))
+        mainSizer.Add(wx.StaticText(self, wx.ID_ANY, "Bins:"))
         mainSizer.Add(self.txtXBins, 1, wx.EXPAND, 10)
-        mainSizer.Add(wx.StaticText(self, wx.ID_ANY, "Y Bins:"))
-        mainSizer.Add(self.txtYBins, 1, wx.EXPAND, 10)
+#        mainSizer.Add(wx.StaticText(self, wx.ID_ANY, "Y Bins:"))
+#        mainSizer.Add(self.txtYBins, 1, wx.EXPAND, 10)
         
         # Sizer
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
@@ -157,26 +157,30 @@ class Heatmap2DOptionsPanel(OptionsDialogPanel):
         self.cbxType.StringSelection = opts['type']
         self.cbxColormap.StringSelection = opts['colorMap']
         self.txtXBins.Value = str(opts['bins'][0])
-        self.txtYBins.Value = str(opts['bins'][1])
+#        if opts['type'] is not self.HEXBINS:
+#            self.txtYBins.Value = str(opts['bins'][1])
             
     
     def validate(self):
         intVal = IntFormatter()
         msg = []
         
+        # validate X bins 
         if not intVal.validate(self.txtXBins.Value):
-            msg.append("X Bins: A valid integer must be entered.")
+            msg.append("Bins: A valid integer must be entered.")
         else:
             val = int(self.txtXBins.Value)
             if val < 10:
-                msg.append("X Bins: A value of at least 10 must be entered.")
-        if self.cbxType.StringSelection != self.HEXBINS:
-            if not intVal.validate(self.txtYBins.Value):
-                msg.append("Y Bins: A valid integer must be entered.")
-            else:
-                val = int(self.txtYBins.Value)
-                if val < 10:
-                    msg.append("A value of at least 10 must be entered.")
+                msg.append("Bins: A value of at least 10 must be entered.")
+            
+        # validate Y bins
+#        if self.cbxType.StringSelection != self.HEXBINS:
+#            if not intVal.validate(self.txtYBins.Value):
+#                msg.append("Y Bins: A valid integer must be entered.")
+#            else:
+#                val = int(self.txtYBins.Value)
+#                if val < 10:
+#                    msg.append("A value of at least 10 must be entered.")
             
         return msg
 
@@ -187,9 +191,10 @@ class Heatmap2DOptionsPanel(OptionsDialogPanel):
         options['type'] = self.cbxType.StringSelection
         options['colorMap'] = self.cbxColormap.StringSelection
         
-        if self.txtYBins.Value == "":
-            self.txtYBins.Value = self.YBins
-        options['bins'] = (int(self.txtXBins.Value), int(self.txtYBins.Value))
+#        if self.txtYBins.Value == "":
+#            self.txtYBins.Value = self.YBins
+#        options['bins'] = (int(self.txtXBins.Value), int(self.txtYBins.Value))
+        options['bins'] = (int(self.txtXBins.Value), None)
         return options
 
 
