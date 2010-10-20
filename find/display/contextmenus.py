@@ -107,9 +107,9 @@ class DataTreePopupMenu(wx.Menu):
     
         if len(plugins) > 0:
             # Add a disabled menu item as a separator
-            item = wx.MenuItem(self, wx.ID_ANY, "---Plugins---")
-            item.Enable(False)
-            menu.AppendItem(item)
+#            item = wx.MenuItem(self, wx.ID_ANY, "---Plugins---")
+#            item.Enable(False)
+#            menu.AppendItem(item)
             
             for method in plugins:
                 menu.AppendItem(wx.MenuItem(self, method[1], method[2], method[3]))
