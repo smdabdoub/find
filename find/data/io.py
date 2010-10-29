@@ -186,7 +186,8 @@ def saveState(dir, filename):
     np.savez(os.path.join(dir, binfile), **bindata)
     
 
-
+from error import ProjectLoadingError
+from zipfile import BadZipfile
 def loadState(dir, filename):
     """
     Restore the system state as stored to disk.
@@ -209,6 +210,11 @@ def loadState(dir, filename):
         bindata = np.load(os.path.join(dir,store['binfile']))
     except IOError:
         bindata = None
+    except BadZipfile:
+        wx.MessageBox('The file \'%s\' may have become corrupted. Project loading has been cancelled' % store['binfile'],
+                      'Data Loading Error',
+                      wx.OK|wx.ICON_ERROR)
+        raise ProjectLoadingError('BadZipfile: %s' % os.path.join(dir,store['binfile']))
     
     # Parse data sets
     for dID in datakeys:
@@ -227,7 +233,8 @@ def loadState(dir, filename):
             cStr = 'clust-%i-%i' % (dID, cID)
             csett = store[cStr]
             clusterIDs = bindata[cStr]
-            fdata.addClustering(csett['method'], clusterIDs, csett['opts'], cID)
+            methodID = lookupClusterID(csett['method'], csett['opts'])
+            fdata.addClustering(methodID, clusterIDs, csett['opts'], cID)
             fdata.clusteringSelDims[cID] = csett['clusteringSelDims']
             fdata.infoExpanded[cID] = csett['infoExpanded']
         
@@ -241,7 +248,9 @@ def loadState(dir, filename):
             fDict = store[fStr]
             splots = []
             for pStr in fDict['subplots']:
-                splots.append(store[pStr])
+                plt = store[pStr]
+                replacePlotType(plt)
+                splots.append(plt)
             fDict['subplots'] = splots
             f = Figure()
             f.load(fDict)
@@ -252,7 +261,9 @@ def loadState(dir, filename):
         # load the saved subplots into a new 'Default' Figure
         plots = []
         for pStr in store['plots']:
-            plots.append(store[pStr])
+            plt = store[pStr]
+            replacePlotType(plt)
+            plots.append(plt)
         defFig = Figure('Default', plots, store['current-subplot'], store['grid'], store['selected-axes'])
         FigureStore.add(defFig)
 
@@ -282,10 +293,41 @@ def packSubplots(store, figID, plots):
 
 
 
+def replacePlotType(plot):
+    if not isinstance(plot['plotType'], int):
+        return
+    
+    opts = plot['opts']
+    
+    if 'xRange' in opts:
+        plot['plotType'] = 'scatterplot2D'
+    elif 'labelAngle' in opts and len(opts) == 1:
+        plot['plotType'] = 'boxplot'
+    elif 'view' in opts:
+        plot['plotType'] = 'barplot'
+    elif 'kdeDisplay' in opts:
+        plot['plotType'] = 'histogram'
+    elif 'colorMap' in opts:
+        plot['plotType'] = 'heatmap2d'
+        
 
-
-
-
+import cluster.methods as cm
+def lookupClusterID(method, opts):
+    if not isinstance(method, int):
+        return
+    
+    mDict = {}
+    methods = cm.getAvailableMethods()
+    for m in methods.values():
+        mDict[m[1]] = m[0]   
+    
+    
+    if 'numPasses' in opts:
+        return mDict['k-means']
+    if 'numInitClusters' in opts:
+        return mDict['Bakker Schut k-means']
+        
+        
 
 
 
