@@ -78,6 +78,10 @@ class DataStore(object):
                 cls.remove(childID)
             # clear the children ID list
             del fd.children[:]
+            # remove ID from list of children in parent
+            if fd.parent is not None:
+                pd = cls._facsData[fd.parent]
+                pd.children = [id for id in pd.children if id != index]
             # finally, delete the item itself
             del cls._facsData[index]
         
