@@ -44,13 +44,16 @@ def addPluginMethod(descriptor):
 
 def getAvailableMethods():
     """
-    Retrieve the list of available clustering algorithms in this module.
+    Retrieve the available clustering algorithms in this module.
     
-    @rtype: list of tuples
-    @return: A list of tuples. Each tuple containing the following information in order:
+    @rtype: dict of tuples
+    @return: A dict of tuples keyed on the int method ID. Each tuple contains
+             the following information in order:
         - method ID (int)
         - method name (string)
         - method description (string)
+        - method
+        - plugin flag
     """
     return methods
 
