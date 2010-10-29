@@ -14,6 +14,7 @@ import display.dialogs as displayDialogs
 import display.view as displayView
 from data.store import DataStore, FacsData, FigureStore, Figure
 from data import io
+import data.fast_kde as dfk
 import error
 import plugin
 import transforms.methods as tm
@@ -518,7 +519,10 @@ class MainWindow(wx.Frame):
         formats = "FIND Project File (*.find)|*.find"
         dlg = wx.FileDialog(self, "Select saved project", self.dirname, "", formats, wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
-            loadState(dlg.Directory, dlg.Filename)
+            try:
+                loadState(dlg.Directory, dlg.Filename)
+            except error.ProjectLoadingError:
+                return
             # Load all Figures with Subplot instances from the stored dicts
             for fID in FigureStore.getFigures():
                 fig = FigureStore.get(fID)
