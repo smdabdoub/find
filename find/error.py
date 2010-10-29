@@ -15,6 +15,12 @@ class PluginError(Exception):
     def __str__(self):
         return self.errMsg
 
+class ProjectLoadingError(Exception):
+    def __init__(self, errType):
+        self.errType = errType
+    
+    def __str__(self):
+        return self.errType
 
 class UnknownFileType(Exception):
     def __init__(self, filename):
