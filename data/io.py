@@ -220,8 +220,10 @@ def loadState(dir, filename):
     for dID in datakeys:
         dStr = 'data-%s' % dID
         dsett = store[dStr]
+        ann = dsett['annotations'] if 'annotations' in dsett else {}
+        ana = dsett['analysis'] if 'analysis' in dsett else {}
         fdata = FacsData(dsett['filename'], dsett['labels'], bindata[dStr], 
-                         annotations=dsett['annotations'], analysis=dsett['analysis'],
+                         annotations=ann, analysis=ana,
                          parent=dsett['parent'])
         fdata.displayname = dsett['displayname']
         fdata.ID = dsett['ID']
@@ -233,8 +235,7 @@ def loadState(dir, filename):
             cStr = 'clust-%i-%i' % (dID, cID)
             csett = store[cStr]
             clusterIDs = bindata[cStr]
-            methodID = lookupClusterID(csett['method'], csett['opts'])
-            fdata.addClustering(methodID, clusterIDs, csett['opts'], cID)
+            fdata.addClustering(csett['method'], clusterIDs, csett['opts'], cID)
             fdata.clusteringSelDims[cID] = csett['clusteringSelDims']
             fdata.infoExpanded[cID] = csett['infoExpanded']
         
@@ -248,9 +249,7 @@ def loadState(dir, filename):
             fDict = store[fStr]
             splots = []
             for pStr in fDict['subplots']:
-                plt = store[pStr]
-                replacePlotType(plt)
-                splots.append(plt)
+                splots.append(store[pStr])
             fDict['subplots'] = splots
             f = Figure()
             f.load(fDict)
@@ -261,9 +260,7 @@ def loadState(dir, filename):
         # load the saved subplots into a new 'Default' Figure
         plots = []
         for pStr in store['plots']:
-            plt = store[pStr]
-            replacePlotType(plt)
-            plots.append(plt)
+            plots.append(store[pStr])
         defFig = Figure('Default', plots, store['current-subplot'], store['grid'], store['selected-axes'])
         FigureStore.add(defFig)
 
@@ -288,45 +285,6 @@ def packSubplots(store, figID, plots):
 
     return splots
 
-
-
-
-
-
-def replacePlotType(plot):
-    if not isinstance(plot['plotType'], int):
-        return
-    
-    opts = plot['opts']
-    
-    if 'xRange' in opts:
-        plot['plotType'] = 'scatterplot2D'
-    elif 'labelAngle' in opts and len(opts) == 1:
-        plot['plotType'] = 'boxplot'
-    elif 'view' in opts:
-        plot['plotType'] = 'barplot'
-    elif 'kdeDisplay' in opts:
-        plot['plotType'] = 'histogram'
-    elif 'colorMap' in opts:
-        plot['plotType'] = 'heatmap2d'
-        
-
-import cluster.methods as cm
-def lookupClusterID(method, opts):
-    if not isinstance(method, int):
-        return
-    
-    mDict = {}
-    methods = cm.getAvailableMethods()
-    for m in methods.values():
-        mDict[m[1]] = m[0]   
-    
-    
-    if 'numPasses' in opts:
-        return mDict['k-means']
-    if 'numInitClusters' in opts:
-        return mDict['Bakker Schut k-means']
-        
         
 
 
