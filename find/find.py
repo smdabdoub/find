@@ -2,6 +2,7 @@ __all__ = ['MainWindow']
 __version__ = '0.3.0'
 
 # Local imports
+import analysis.methods as aMthds
 import cluster.dialogs as cDlgs
 import cluster.methods as cMthds
 import cluster.util as cUtil
@@ -74,7 +75,7 @@ class MainWindow(wx.Frame):
         
         # Plugin menu
         if loadPlugins:
-            self.pluginsMenu = self.generatePluginsMenu()
+            self.pluginsMenu = plugin.addPluginFunctionality(self)
         
         self.dirname=''
         
@@ -254,87 +255,6 @@ class MainWindow(wx.Frame):
     
     def setSelectedPlotStatus(self, status):
         self.statusbar.SetStatusText(status, 1)
-    
-    #TODO: move at least part of this to the plugin module
-    def generatePluginsMenu(self):
-        pluginsMenu = wx.Menu()
-        submenus = {}
-        for type_ in plugin.pluginTypes:
-            submenus[type_] = wx.Menu()
-        
-        # Add loaded plugins to the submenus
-        for type_ in plugin.loaded:
-            for module in plugin.loaded[type_]:
-                try:
-                    pluginMethods = module.__all__
-                # skip this module if it does not define __all__
-                except AttributeError:
-                    continue
-                # Handle special cases for various types
-                
-                #TODO: Implement Analysis plugins
-                # Analysis plugins
-                if type_ == plugin.pluginTypes[0]:
-                    continue
-                # Clustering plugins
-                elif type_ == plugin.pluginTypes[1]:
-                    for method in pluginMethods:
-                        cID = wx.NewId()
-                        cmethod, cdialog = eval('module.'+method)()
-                        doc = cmethod.__doc__.split(';')
-                        name = doc[0].strip()
-                        descr = doc[1].strip()
-                        cMthds.addPluginMethod((cID, name, descr, cmethod, True))
-                        cDlgs.addPluginDialog(cID, cdialog)
-                        # Create the menu item
-                        submenus[type_].Append(cID, name, descr)
-                        self.Bind(wx.EVT_MENU, self.OnCluster, id=cID)
-                # Plotting plugins
-                elif type_ == plugin.pluginTypes[2]:
-                    for method in pluginMethods:
-                        pID = wx.NewId()
-                        pmethod, pdialog, dtypes = eval('module.'+method)()
-                        doc = pmethod.__doc__.split(';')
-                        strID = doc[0].strip()
-                        name  = doc[1].strip()
-                        descr = doc[2].strip()
-                        pMthds.addPluginMethod((strID, pID, name, descr, pmethod, dtypes, True))
-                        pDlgs.addPluginDialog(strID, pdialog)
-                        # Create a disabled menu item to indicate plugin was loaded
-                        item = wx.MenuItem(submenus[type_], pID, name, descr)
-                        item.Enable(False)
-                        submenus[type_].AppendItem(item)
-                # I/O plugins
-                elif type_ == plugin.pluginTypes[3]:
-                    for method in pluginMethods:
-                        name, cls = eval('module.'+method)()
-                        ci = cls('')
-                        descr = ' '.join(name, 'plugin') if ci.__doc__ is None \
-                                else ci.__doc__.strip().split('\n')[0]
-                        io.addPluginMethod((name, wx.NewId(), cls, True))
-                        # Create a disabled menu item to indicate plugin was loaded
-                        item = wx.MenuItem(submenus[type_], wx.ID_ANY, name, descr)
-                        item.Enable(False)
-                        submenus[type_].AppendItem(item)
-                # Transforms plugins
-                elif type_ == plugin.pluginTypes[4]:
-                    pID = wx.NewId()
-                    tmethod, tscaleClass = eval('module.'+method)()
-                    doc = tmethod.__doc__.split(';')
-                    strID = doc[0].strip()
-                    name  = doc[1].strip()
-                    descr = doc[2].strip()
-                    tm.addPluginMethod((strID, pID, name, descr, tmethod, tscaleClass))
-                
-     
-        # Add submenus to main menu
-        for type_ in plugin.pluginTypes:
-            if type_ == 'IO':
-                pluginsMenu.AppendSubMenu(submenus[type_], type_)
-            else:
-                pluginsMenu.AppendSubMenu(submenus[type_], type_.capitalize())
-        
-        return pluginsMenu
         
     
     ## EVENT HANDLING ##     
@@ -547,6 +467,32 @@ class MainWindow(wx.Frame):
         
         dlg.Destroy()
 
+    # Analysis
+    def OnAnalyze(self, event):
+        """
+        Handles all requests for analysis methods; built-in and plugins.
+        
+        Currently, analysis methods expect data, a list of dimensions
+        available to use in analysis, and a window ref in order to 
+        display a subwindow/dialog with results or options.
+        
+        Analysis methods are expected to return data and/or a status
+        message. Currently returned data is only used when called from
+        code, not from the menu; which this method represents.
+        """
+        if (DataStore.getCurrentDataSet() is not None):
+                strID = aMthds.strID(event.GetId())
+                self.statusbar.SetStatusText('Running %s...' % aMthds.AvailableMethods()[strID][2], 0)
+                fcs = DataStore.getCurrentDataSet()
+                data = fcs.data
+                # Remove columns from analysis as specified by the user
+                if len(fcs.selDims) > 0:
+                    data = dh.filterData(data, fcs.selDims)
+                args = {'parentWindow': self}
+                _, msg = aMthds.getMethod(strID)(data, **args)
+                self.statusbar.SetStatusText(msg, 0)
+        
+        
     
     # Cluster Menu
     def OnCluster(self, event):
