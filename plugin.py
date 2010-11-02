@@ -5,6 +5,8 @@ Created on Jul 30, 2009
 '''
 import error
 
+import wx
+
 import os.path
 import sys
 
@@ -78,5 +80,117 @@ def importPlugins(plugins):
     
     
 
-
+import analysis.methods as aMthds
+import cluster.dialogs as cDlgs
+import cluster.methods as cMthds
+from data import io
+import plot.dialogs as pDlgs
+import plot.methods as pMthds
+import transforms.methods as tm
+    
+#TODO: move the special handling code for each plugin type to separate methods
+def addPluginFunctionality(parent):
+    """
+    The main function of this method is to scan through all the discovered
+    plugins and make the valid plugins available to FIND through the plugin
+    architecture.
+    
+    As a by-product, each valid plugin is added to the Plugins menu on the 
+    main menubar that this method also creates. All plugins are added, but 
+    not all are available for interaction through the menu. These plugins 
+    are disabled and are added only to inform the user that they were loaded.
+    
+    :@type parent: wx.Window
+    :@param parent: The main FIND window 
+    """
+    pluginsMenu = wx.Menu()
+    submenus = {}
+    for type_ in pluginTypes:
+        submenus[type_] = wx.Menu()
+    
+    # Add loaded plugins to the submenus
+    for type_ in loaded:
+        for module in loaded[type_]:
+            try:
+                pluginMethods = module.__all__
+            # skip this module if it does not define __all__
+            except AttributeError:
+                continue
+            # Handle special cases for various types
+            
+            # Analysis plugins
+            if type_ == pluginTypes[0]:
+                for method in pluginMethods:
+                    aID = wx.NewId()
+                    amethod, fIndependent = eval('module.'+method)()
+                    doc = amethod.__doc__.split(';')
+                    strID = doc[0].strip()
+                    name = doc[1].strip()
+                    descr = doc[2].strip()
+                    aMthds.addPluginMethod((strID, aID, name, descr, amethod, True))
+                    # Create the menu item
+                    aitem = wx.MenuItem(submenus[type_], aID, name, descr)
+                    if not fIndependent: 
+                        aitem.Enable(False)
+                    submenus[type_].AppendItem(aitem)
+                    parent.Bind(wx.EVT_MENU, parent.OnAnalyze, id=aID)
+            # Clustering plugins
+            elif type_ == pluginTypes[1]:
+                for method in pluginMethods:
+                    cID = wx.NewId()
+                    cmethod, cdialog = eval('module.'+method)()
+                    doc = cmethod.__doc__.split(';')
+                    name = doc[0].strip()
+                    descr = doc[1].strip()
+                    cMthds.addPluginMethod((cID, name, descr, cmethod, True))
+                    cDlgs.addPluginDialog(cID, cdialog)
+                    # Create the menu item
+                    submenus[type_].Append(cID, name, descr)
+                    parent.Bind(wx.EVT_MENU, parent.OnCluster, id=cID)
+            # Plotting plugins
+            elif type_ == pluginTypes[2]:
+                for method in pluginMethods:
+                    pID = wx.NewId()
+                    pmethod, pdialog, dtypes = eval('module.'+method)()
+                    doc = pmethod.__doc__.split(';')
+                    strID = doc[0].strip()
+                    name  = doc[1].strip()
+                    descr = doc[2].strip()
+                    pMthds.addPluginMethod((strID, pID, name, descr, pmethod, dtypes, True))
+                    pDlgs.addPluginDialog(strID, pdialog)
+                    # Create a disabled menu item to indicate plugin was loaded
+                    item = wx.MenuItem(submenus[type_], pID, name, descr)
+                    item.Enable(False)
+                    submenus[type_].AppendItem(item)
+            # I/O plugins
+            elif type_ == pluginTypes[3]:
+                for method in pluginMethods:
+                    name, cls = eval('module.'+method)()
+                    ci = cls('')
+                    descr = ' '.join(name, 'plugin') if ci.__doc__ is None \
+                            else ci.__doc__.strip().split('\n')[0]
+                    io.addPluginMethod((name, wx.NewId(), cls, True))
+                    # Create a disabled menu item to indicate plugin was loaded
+                    item = wx.MenuItem(submenus[type_], wx.ID_ANY, name, descr)
+                    item.Enable(False)
+                    submenus[type_].AppendItem(item)
+            # Transforms plugins
+            elif type_ == pluginTypes[4]:
+                pID = wx.NewId()
+                tmethod, tscaleClass = eval('module.'+method)()
+                doc = tmethod.__doc__.split(';')
+                strID = doc[0].strip()
+                name  = doc[1].strip()
+                descr = doc[2].strip()
+                tm.addPluginMethod((strID, pID, name, descr, tmethod, tscaleClass))
+            
+ 
+    # Add submenus to main menu
+    for type_ in pluginTypes:
+        if type_ == 'IO':
+            pluginsMenu.AppendSubMenu(submenus[type_], type_)
+        else:
+            pluginsMenu.AppendSubMenu(submenus[type_], type_.capitalize())
+            
+    return pluginsMenu
 
