@@ -405,6 +405,10 @@ class FigureStore(object):
     def sort(cls):
         """sort the figures dict based on key"""
         return sorted(cls._figures.iteritems(), key=itemgetter(0))
+    
+    @classmethod
+    def isEmpty(cls):
+        return len(cls._figures) == 0
 
 
 class Figure(object):
