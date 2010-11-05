@@ -1,6 +1,6 @@
 """
 This module provides the functionality to 
-read and write CSV files from FACS data. 
+read and write CSV files from FC data. 
 """
 from data.io import FILE_INPUT, FILE_OUTPUT
 from display.dialogs import ValidatedDialog
@@ -16,9 +16,7 @@ __all__ = ['register_csv']
 class CSVPlugin(IOPlugin):
     """Read and write CSV files."""
     def __init__(self, filename=None, fcData=None, window=None):
-        self.filename = filename
-        self.fcData = fcData
-        self.window = window
+        super(CSVPlugin, self).__init__(filename, fcData, window)
     
     def register(self):
         return {FILE_INPUT: self.load, FILE_OUTPUT: self.save}
