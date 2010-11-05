@@ -1,5 +1,5 @@
 __all__ = ['MainWindow']
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 # Local imports
 import analysis.methods as aMthds
@@ -385,11 +385,12 @@ class MainWindow(wx.Frame):
             if (numLoaded > 1):
                 self.facsPlotPanel.updateSubplotGrid(int(math.ceil(numLoaded/2.0)), 2)
             self.statusbar.SetStatusText('All data files loaded.')
-               
-            fig = Figure('Default', self.facsPlotPanel.subplots, 1,
-                         self.facsPlotPanel.Grid, 
-                         self.facsPlotPanel.SelectedAxes)
-            FigureStore.add(fig)
+            
+            if FigureStore.isEmpty():
+                fig = Figure('Default', self.facsPlotPanel.subplots, 1,
+                             self.facsPlotPanel.Grid, 
+                             self.facsPlotPanel.SelectedAxes)
+                FigureStore.add(fig)
             self.treeCtrlPanel.updateTree()
             
         dlg.Destroy()
