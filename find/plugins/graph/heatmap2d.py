@@ -11,7 +11,7 @@ import transforms.methods as tm
 import matplotlib.cm as CM
 import numpy as np
 
-def heatmap2d(subplot, figure, dims=None):
+def heatmap2d(subplot, figure, dims):
     """
     heatmap2d; 2D Heatmap; Plots a 2D heatmap of the data with event density as the main indicator.
     """
@@ -46,6 +46,8 @@ def heatmap2d(subplot, figure, dims=None):
         gAx = subplot.axes.hexbin(x, y, gridsize=opts['bins'][0], extent=extent, mincnt=1, cmap=cmap)
         cbLabel = 'Events'
 
+    # The following two means of calculating the heat map do not 
+    # work correctly yet and are not enabled for selection.
     if opts['type'] == 'Gaussian KDE':
         kdeGrid = fast_kde(x, y, gridsize=opts['bins'])
         gAx = subplot.axes.imshow(kdeGrid, extent=extent, cmap=cmap,
