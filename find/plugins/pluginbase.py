@@ -1,6 +1,6 @@
 """
 This module contains the base classes and implementation information needed
-for creating FWAC plugins.
+for creating FIND plugins.
 
 MODULE IMPLEMENTATION:
 All modules must be placed in the appropriate plugin folder. 
@@ -18,30 +18,6 @@ description string to aid the user. These will be delimited by semicolons(;),
 and any additional documentation the programmer wishes to provide will be 
 placed after the final ; delimiter. If these are not provided, the method name 
 and a blank string will be used as the short name and descriptor respectively.
-
-* Clustering Plugins:
-
-  Each method specified in the __all__ list must return a tuple of the 
-  following form:
-  
-  (clustering method, clustering options dialog class)
-  
-  The clustering method will have the following signature:
-  
-  cluster(data, **kwargs)
-  @type data: ndarray (Numpy) 
-  @var data: An mxn array containing all the numeric data
-  @type kwargs: dict
-  @var kwargs: A dict of user-selected options provided by the
-               options dialog class
-  @rtype: tuple (list, str)
-  @return: A tuple containing an m-length list specifying the cluster 
-           membership of each row entry in the data array, and a string message
-           to be displayed to the user.
-           
-  The options dialog must inherit from ClusterOptionsDialog, provided in 
-  this module. Note that each of the specified virtual methods in the class
-  must be implemented to properly function within the program.   
 
 @author: Shareef Dabdoub
 @organization: The Ohio State University
@@ -110,13 +86,20 @@ class IOPlugin(Plugin):
     """
     All IOPlugins are expected to provide methods for opening and/or saving 
     data files.
-    
-    Register method: returns a dictionary keyed on the FILE_INPUT and 
-    FILE_OUTPUT IDs (found in data.io) to indicate which (if any) methods
-    provide input and output functionality.
     """
-    def __init__(self, filename):
+    def __init__(self, filename=None, fcData=None, window=None):
         self.filename = filename
+        self.fcData = fcData
+        self.window = window
+        
+    def register(self):
+	    """
+	    returns a dictionary keyed on the FILE_INPUT and 
+	    FILE_OUTPUT IDs (found in data.io) to indicate which (if any) methods
+	    provide input and output functionality.
+	    """
+	    pass
+    
     
     def fileType(self):
         """
@@ -127,7 +110,7 @@ class IOPlugin(Plugin):
         """
         pass
     
-    def read(self, file):
+    def read(self):
         """
         Given the specified path of a data file, input the data and return
         it along with the column labels, and any annotations or analysis.
@@ -137,9 +120,9 @@ class IOPlugin(Plugin):
         """
         pass
         
-    def save(self, file, facsData):
+    def save(self):
         """
-        Write the FACS data to the specified file.
+        Write the FC data to the specified file.
         """
         pass
     
