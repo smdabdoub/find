@@ -172,7 +172,7 @@ class FigureSetupDialog(ValidatedDialog):
     """
     
     def __init__(self, parent, rows=1, cols=1):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Specify figure subplot grid', size=(200, 150))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, 'Plot Grid Setup', size=(200, 150))
         self.CenterOnParent()
         
         # create form controls
