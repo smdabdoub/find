@@ -5,6 +5,14 @@ FIND is a program designed for analysis and visualization of
 Flow Cytometry data. FIND focuses specifically on automated population 
 discovery (clustering) methods.
 
+The main website for FIND is:
+
+http://www.justicelab.org/find
+
+Executables are available for OS X and Windows. FIND runs on Linux, 
+but must be run from the source. Instructions for installing/running 
+on each platform are below.
+
 Documentation for using FIND as well as developing plugins can be read at:
 
 http://find.readthedocs.org/
