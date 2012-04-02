@@ -1,5 +1,5 @@
 Flow Investigation using N-Dimensions 
-========================
+=====================================
 
 FIND is a program designed for analysis and visualization of 
 Flow Cytometry data. FIND focuses specifically on automated population 
@@ -45,7 +45,7 @@ run:
 
 The FIND application is run with the following command:
 
-> $>python find.py
+> $> python find.py
 
 Plugins can be installed by copying the related files to the appropriate subdirectory 
 under the plugins directory. Make sure to keep the 'find' folder in the same 
