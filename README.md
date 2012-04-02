@@ -1,17 +1,19 @@
-Flow Investigation using N-Dimensions (FIND) is a program designed for analysis and 
-visualization of Flow Cytometry data. FIND focuses specifically on automated 
-population discovery (clustering) methods.
+Flow Investigation using N-Dimensions 
+========================
 
-FIND v0.3.1 is released under the GPLv3 license, the text of which can be found at:
+FIND is a program designed for analysis and visualization of 
+Flow Cytometry data. FIND focuses specifically on automated population 
+discovery (clustering) methods.
 
-http://www.opensource.org/licenses/GPL-3.0
+Documentation for using FIND as well as developing plugins can be read at:
 
-Installation Instructions
-=========================
+http://find.readthedocs.org/
 
-----
-OS X
-----
+
+## Installation Instructions
+
+### OS X
+
 Copy the 'find' folder from the disk image to your Applications directory or wherever 
 else you want to run it from. Make sure to keep the plugins directory in the same 
 folder as the find app.
@@ -19,23 +21,19 @@ folder as the find app.
 Plugins can be installed by copying the related files 
 to the appropriate subdirectory under the plugins directory.
 
--------
-Windows
--------
-The main FIND executable is located at:
+### Windows
 
+The main FIND executable is located at:
 find/find.exe
 
 The plugins folder is located at:
-
 find/plugins
 
-Plugins can be installed by copying the related files 
+Plugins can be installed by copying the related files
 to the appropriate subdirectory under the plugins directory.
 
------
-Linux
------
+### Linux
+
 FIND requires Python 2.7 and recent versions of the following Python libraries to 
 run:
 
@@ -47,8 +45,17 @@ run:
 
 The FIND application is run with the following command:
 
-$> python find.py
+> $>python find.py
 
 Plugins can be installed by copying the related files to the appropriate subdirectory 
 under the plugins directory. Make sure to keep the 'find' folder in the same 
 directory as the plugins folder.
+
+
+---
+Version 0.3 of FIND is released under the GPLv3.
+
+Please address any comments or questions to:
+
+Shareef M. Dabdoub, Ph.D.  
+dabdoub.2@osu.edu
