@@ -26,19 +26,15 @@ Copy the 'find' folder from the disk image to your Applications directory or whe
 else you want to run it from. Make sure to keep the plugins directory in the same 
 folder as the find app.
 
-Plugins can be installed by copying the related files 
-to the appropriate subdirectory under the plugins directory.
-
 ### Windows
 
-The main FIND executable is located at:
-find/find.exe
+The zip file contains a self-extracting installer that will guide you through the installation 
+process. Once FIND has been installed, the main executable is located at:
 
-The plugins folder is located at:
-find/plugins
+<install dir.>/find.exe
 
-Plugins can be installed by copying the related files
-to the appropriate subdirectory under the plugins directory.
+and the plugins folder is located at:
+<install dir.>/plugins
 
 ### Linux
 
@@ -55,9 +51,23 @@ The FIND application is run with the following command:
 
 > $> python find.py
 
-Plugins can be installed by copying the related files to the appropriate subdirectory 
-under the plugins directory. Make sure to keep the 'find' folder in the same 
-directory as the plugins folder.
+## Plugins
+
+FIND provides an API for programmers to extend the functionality of the application. 
+Documentation and examples on creating plugins for use with FIND can be found at:
+
+http://find.readthedocs.org/en/latest/devman/index.html
+
+Currently all plugins are available for download on the official website at:
+
+http://www.justicelab.org/find/plugins/
+
+If you would like to publish a FIND plugin on the official site, please use the contact 
+information at the end of this document.
+
+New plugins can be installed by copying the related files to the appropriate subdirectory 
+under the plugins directory. Make sure to keep the plugins directory in the same location 
+as the find executable (find.py in the case of *nix).
 
 
 ---
