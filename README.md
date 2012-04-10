@@ -71,7 +71,7 @@ as the find executable (find.py in the case of *nix).
 
 
 ---
-Version 0.3 of FIND is released under the GPLv3.
+Version 0.3.1 of FIND is released under the GPLv3.
 
 Please address any comments or questions to:
 
