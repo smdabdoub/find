@@ -34,6 +34,7 @@ process. Once FIND has been installed, the main executable is located at:
 < install directory >/find.exe
 
 and the plugins folder is located at:
+
 < install directory >/plugins
 
 ### Linux
