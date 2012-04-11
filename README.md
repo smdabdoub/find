@@ -31,10 +31,10 @@ folder as the find app.
 The zip file contains a self-extracting installer that will guide you through the installation 
 process. Once FIND has been installed, the main executable is located at:
 
-<install dir.>/find.exe
+< install directory >/find.exe
 
 and the plugins folder is located at:
-<install dir.>/plugins
+< install directory >/plugins
 
 ### Linux
 
